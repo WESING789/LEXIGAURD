@@ -6,95 +6,66 @@ from PIL import Image
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 from agent import auditor_app, sanitize_and_fingerprint
-
-st.set_page_config(page_title="LEXGUARDIAN | Enterprise Legal AI", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="LEXGUARDIAN", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""<style>
-.block-container{padding-top:1.4rem;max-width:1280px}
-.lex-bar{background:linear-gradient(135deg,#070b14,#131c31 60%,#1e1b4b);border:1px solid #334155;border-radius:14px;padding:1.4rem 1.8rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;box-shadow:0 10px 28px rgba(0,0,0,0.3)}
-.lex-brand{display:flex;align-items:center;gap:1rem}
-.lex-h1{font-size:1.95rem;font-weight:800;letter-spacing:1.6px;background:linear-gradient(90deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0}
-.lex-p{color:#94a3b8;font-size:0.9rem;margin:0.2rem 0 0 0}
-.lex-tag{background:#0f172a;color:#38bdf8;border:1px solid #1e3a8a;padding:0.32rem 0.9rem;border-radius:999px;font-size:0.76rem;font-weight:600;letter-spacing:0.5px}
-div.stButton>button{border-radius:8px;font-weight:600;height:42px;letter-spacing:0.3px}
-</style><div class="lex-bar"><div class="lex-brand"><svg width="44" height="44" viewBox="0 0 64 64" fill="none"><polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#38bdf8" fill-opacity="0.14" stroke="#38bdf8" stroke-width="3"/><path d="M22 24L32 18L42 24V38L32 46L22 38V24Z" stroke="#a78bfa" stroke-width="2.5"/><circle cx="32" cy="32" r="4" fill="#f8fafc"/></svg><div><div class="lex-h1">LEXGUARDIAN</div><div class="lex-p">Zero-Trust Contract, Offer Letter & DPDP Privacy Intelligence</div></div></div><div class="lex-tag">AIR-GAPPED • VERBATIM VERIFIED • SHA-256</div></div>""", unsafe_allow_html=True)
-
+.lex-bar{background:linear-gradient(135deg,#070b14,#131c31 60%,#1e1b4b);border:1px solid #334155;border-radius:14px;padding:1.3rem 1.7rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.lex-h1{font-size:1.9rem;font-weight:800;letter-spacing:1.5px;background:linear-gradient(90deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0}
+.good-card{background:rgba(16,185,129,0.12);border-left:4px solid #10b981;border-radius:8px;padding:0.8rem 1rem;margin-bottom:0.6rem}
+.bad-card{background:rgba(239,68,68,0.12);border-left:4px solid #ef4444;border-radius:8px;padding:0.8rem 1rem;margin-bottom:0.5rem}
+</style><div class="lex-bar"><div style="display:flex;align-items:center;gap:1rem"><svg width="42" height="42" viewBox="0 0 64 64" fill="none"><polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#38bdf8" fill-opacity="0.15" stroke="#38bdf8" stroke-width="3"/><circle cx="32" cy="32" r="5" fill="#818cf8"/></svg><div><div class="lex-h1">LEXGUARDIAN</div><div style="color:#cbd5e1;font-size:0.9rem">Skip the Fine Print. Catch Hidden Loopholes, Contradictions & Traps Instantly.</div></div></div><div style="color:#38bdf8;font-size:0.76rem;font-weight:700">AIR-GAPPED • SHA-256</div></div>""", unsafe_allow_html=True)
 PRESETS = {
-    "Job Offer & Employment Letter": {"rules": "1. Notice period must not exceed 60 days.\n2. No unfair monetary training bonds.\n3. No broad post-employment non-compete.", "sample": "OFFER LETTER (Date: 21/11/2026)\n1. NOTICE: Employee must serve 90 days notice; Company may terminate immediately.\n2. BOND: Employee pays Rs. 2,00,000 if leaving within 2 years."},
-    "Residential Rent Agreement": {"rules": "1. Security deposit refunded within 30 days.\n2. Minimum 30 days eviction notice.\n3. Annual rent hike max 10%.", "sample": "RENTAL AGREEMENT (Date: 21/11/2026)\n1. DEPOSIT: Landlord may retain full Rs. 50,000 deposit for painting.\n2. EVICTION: Landlord may evict in 48 hours without notice."},
-    "Aadhaar & KYC Privacy Audit": {"rules": "1. Full 12-digit Aadhaar numbers must be masked.\n2. No foreign server storage or ad sharing.", "sample": "KYC RECORD (Date: 21/11/2026)\nName: Rahul Sharma | Aadhaar: 4589 2314 9876 | PAN: ABCDE1234F\nConsent: Store unmasked Aadhaar on foreign servers."},
-    "Loan, EMI & Subscription Terms": {"rules": "1. No excessive early foreclosure penalties.\n2. No hidden auto-renewal without notice.", "sample": "LOAN TERMS (Date: 21/11/2026)\n1. PREPAYMENT: 12% penalty on total principal for early closure.\n2. AUTO-RENEW: Annual auto-debit with zero refund."},
-    "Vendor & DPDP Compliance": {"rules": "1. Customer data must stay in India.\n2. Liability cap minimum 12 months fees.\n3. Governing law of India.", "sample": "MASTER AGREEMENT (Date: 21/11/2026)\n1. DATA: Store Indian records on US servers and share with affiliates.\n2. LIABILITY: Capped at $500 USD including data breaches."}
+    "Job Offer (Essentials Only)": {"rules": "1. Max 60 days notice.\n2. Zero exit bonds.\n3. Keep personal side-projects.", "sample": "OFFER LETTER (21/11/2026)\n1. SALARY: Paid on 1st of month with health insurance.\n2. EXIT: Employee may resign anytime.\n3. FINE PRINT: Leaving within 24 months triggers a Rs. 2,00,000 bond and 90-day unpaid notice."},
+    "Rent Agreement (Essentials Only)": {"rules": "1. Deposit refund in 30 days.\n2. 30 days eviction notice.\n3. Max 10% rent hike.", "sample": "RENT AGREEMENT (21/11/2026)\n1. REPAIRS: Landlord pays property tax.\n2. FLEXIBILITY: Tenant may vacate anytime.\n3. TRAP: Leaving before 11 months forfeits 100% of Rs. 50,000 deposit."},
+    "Aadhaar & KYC Privacy (Necessary Only)": {"rules": "1. Only masked Aadhaar allowed.\n2. Zero foreign storage or ad sharing.", "sample": "KYC FORM (21/11/2026)\nName: Rahul Sharma | Aadhaar: 4589 2314 9876 | PAN: ABCDE1234F\nConsent: Store unmasked Aadhaar overseas and share with ad partners."},
+    "Loan & App Terms (Essentials Only)": {"rules": "1. Zero hidden foreclosure fees.\n2. Easy 1-click cancellation.", "sample": "SUBSCRIPTION TERMS (21/11/2026)\n1. TRIAL: Free 7-day trial.\n2. BILLING: Auto-locks into a 1-year non-refundable plan unless cancelled by post 60 days early."}
 }
-
-def read_image(img_file):
-    if not os.getenv("GOOGLE_API_KEY"): return "Upload PDF or text locally, or use the live web deployment for image OCR."
-    buf = BytesIO(); Image.open(img_file).save(buf, format="PNG")
-    b64 = base64.b64encode(buf.getvalue()).decode()
-    msg = HumanMessage(content=[{"type":"text","text":"Transcribe all text and numbers accurately."},{"type":"image_url","image_url":{"url":f"data:image/png;base64,{b64}"}}])
+def read_img(f):
+    if not os.getenv("GOOGLE_API_KEY"): return "Upload PDF/text locally, or use the live website for photo OCR."
+    b = BytesIO(); Image.open(f).save(b, format="PNG")
+    msg = HumanMessage(content=[{"type":"text","text":"Transcribe all text accurately."},{"type":"image_url","image_url":{"url":f"data:image/png;base64,{base64.b64encode(b.getvalue()).decode()}"}}])
     return ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0).invoke([msg]).content
-
-for k, v in [("doc_input", ""), ("result", None), ("meta", None)]:
+for k, v in [("doc_input", ""), ("result", None), ("good", []), ("tldr", []), ("meta", None)]:
     if k not in st.session_state: st.session_state[k] = v
-
 t1, t2, t3, t4 = st.tabs(["Audit Workspace", "Risk Analytics", "Security Certificate", "ⓘ Info & Guide"])
 with t1:
-    c1, c2 = st.columns([1, 1.15], gap="large")
+    c1, c2 = st.columns([1, 1.2], gap="large")
     with c1:
-        choice = st.selectbox("Document Category", list(PRESETS.keys()))
-        with st.expander("Configure Compliance Rules"):
-            playbook = st.text_area("Active Rules", value=PRESETS[choice]["rules"], height=105)
-        up = st.file_uploader("Upload PDF or Document Image (PDF, PNG, JPG)", type=["pdf", "png", "jpg", "jpeg"])
-        b1, b2 = st.columns(2, gap="small")
-        if b1.button("Load Sample", use_container_width=True):
-            st.session_state.doc_input = PRESETS[choice]["sample"]; st.session_state.result = None; st.rerun()
-        if b2.button("Clear Workspace", use_container_width=True):
-            st.session_state.doc_input = ""; st.session_state.result = None; st.session_state.meta = None; st.rerun()
-        if up:
-            raw_text = "\n".join([p.extract_text() or "" for p in PdfReader(up).pages[:20]]) if up.type == "application/pdf" else read_image(up)
-            st.caption(f"Loaded: {up.name}")
-        else:
-            raw_text = st.text_area("Document Text", key="doc_input", placeholder="Paste contract, offer letter, rent agreement, or KYC text here...", height=180, label_visibility="collapsed")
-        a1, a2 = st.columns([1.8, 1], gap="small")
+        choice = st.selectbox("Category (Necessary Essentials)", list(PRESETS.keys()))
+        with st.expander("View / Edit Minimum Conditions"): playbook = st.text_area("Rules", value=PRESETS[choice]["rules"], height=90)
+        up = st.file_uploader("Upload PDF or Photo", type=["pdf", "png", "jpg", "jpeg"])
+        b1, b2 = st.columns(2)
+        if b1.button("Load Sample", use_container_width=True): st.session_state.doc_input = PRESETS[choice]["sample"]; st.session_state.result = None; st.rerun()
+        if b2.button("Clear Workspace", use_container_width=True): st.session_state.doc_input = ""; st.session_state.result = None; st.session_state.good = []; st.session_state.tldr = []; st.rerun()
+        raw_text = ("\n".join([p.extract_text() or "" for p in PdfReader(up).pages[:20]]) if up.type == "application/pdf" else read_img(up)) if up else st.text_area("Text", key="doc_input", placeholder="Paste contract, offer letter, or rent agreement here...", height=160, label_visibility="collapsed")
+        mode = st.radio("Mode", ["Strict Audit (Every Small Point)", "Work Anyway (Dealbreakers Only)"], horizontal=True)
+        a1, a2, a3 = st.columns([1.3, 1, 1.2])
         run_btn = a1.button("Run Audit", type="primary", use_container_width=True)
         pii_on = a2.toggle("Mask PII", value=False)
+        reveal_details = a3.toggle("Show Loopholes & Fixes", value=False)
         if run_btn and raw_text.strip():
-            with st.spinner("Analyzing clauses and verifying verbatim citations..."):
+            with st.spinner("Scanning document..."):
                 clean, meta = sanitize_and_fingerprint(raw_text, mask_pii=pii_on)
                 out = auditor_app.invoke({"contract_text": clean, "playbook_rules": playbook, "retries": 0, "hallucination_errors": [], "security_metadata": meta})
-                st.session_state.result, st.session_state.meta = out["report"].get("findings", []), meta
+                st.session_state.result, st.session_state.good, st.session_state.tldr, st.session_state.meta = out["report"].get("findings", []), out["report"].get("good", []), out["report"].get("tldr", []), meta
     with c2:
-        res, meta = st.session_state.result, st.session_state.meta
-        if res is None: st.info("Paste your document text, upload a file, or click Load Sample to begin.")
-        elif not res: st.success("No compliance violations or hidden risks detected.")
+        res, good, tldr, meta = st.session_state.result, st.session_state.good, st.session_state.tldr, st.session_state.meta
+        if res is None: st.info("Paste text, upload a file, or click Load Sample to start.")
         else:
-            score = min(100, sum({"CRITICAL":35,"HIGH":25,"MEDIUM":12,"LOW":5}.get(f["risk_level"],10) for f in res))
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Risk Index", f"{score}/100"); m2.metric("Violations", len(res)); m3.metric("PII Redacted", meta["pii_redacted"])
-            rep = f"# LEXGUARDIAN Audit Report\nDate: 21/11/2026 | Risk Index: {score}/100 | SHA-256: {meta['sha256']}\n\n"
-            for i in res:
-                with st.expander(f"[{i['risk_level']}] {i['clause_topic']}", expanded=True):
-                    st.markdown(f"**Verified Quote:**\n> *\"{i['exact_quote']}\"*")
-                    st.markdown(f"**Analysis:** {i['violation_reason']}")
+            shown = [i for i in res if i["risk_level"] in ("CRITICAL", "HIGH")] if "Work Anyway" in mode else res
+            score = min(100, sum({"CRITICAL":35,"HIGH":25,"MEDIUM":12,"LOW":5}.get(f["risk_level"],10) for f in shown))
+            m1, m2, m3 = st.columns(3); m1.metric("Risk Index", f"{score}/100"); m2.metric("Loopholes Found", len(shown)); m3.metric("Good Points", len(good))
+            if tldr: st.info("**Quick Summary (Skip Reading):**\n" + "\n".join([f"- {b}" for b in tldr]))
+            if good:
+                st.markdown("#### Good & Fair Points")
+                for g in good: st.markdown(f'<div class="good-card"><b style="color:#34d399">✓ {g["topic"]}</b><br><i>"{g["exact_quote"]}"</i><br>{g["benefit_summary"]}</div>', unsafe_allow_html=True)
+            if reveal_details or st.checkbox("Ask AI to Reveal Loopholes & Safer Fixes", value=False):
+                st.markdown("#### Hidden Loopholes & Contradictions")
+                if not shown: st.success("Safe to proceed — no loopholes flagged.")
+                for i in shown:
+                    st.markdown(f'<div class="bad-card"><b style="color:#f87171">⚠ [{i["risk_level"]}] {i.get("finding_type","TRAP")} — {i["clause_topic"]}</b><br><i>"{i["exact_quote"]}"</i><br>{i["violation_reason"]}</div>', unsafe_allow_html=True)
                     st.code(i["suggested_redline"], language="text")
-                rep += f"## [{i['risk_level']}] {i['clause_topic']}\n- Quote: \"{i['exact_quote']}\"\n- Redline: {i['suggested_redline']}\n\n"
-            st.download_button("Export Report", rep, "LEXGUARDIAN_Report.md", use_container_width=True)
 with t2:
-    if st.session_state.result:
-        counts = {k: sum(1 for f in st.session_state.result if f["risk_level"] == k) for k in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]}
-        st.bar_chart(counts)
-    else: st.info("Run an audit first to view risk distribution.")
-with t3: st.json(st.session_state.meta or {"status": "Ready", "date_format": "DD/MM/YYYY", "release_date": "21/11/2026", "storage": "Zero-Retention Memory Only"})
-with t4:
-    st.markdown("""### LEXGUARDIAN — User Guide & Platform Info
-- **Architected & Engineered by:** **WESING**
-- **Release Date:** 21/11/2026 (Format: DD/MM/YYYY)
-
-#### How to Use This Platform (Step-by-Step A, B, C)
-- **A. Select Your Document Category:** Choose the type of document you are checking (e.g., *Job Offer & Employment Letter*, *Residential Rent Agreement*, or *Aadhaar & KYC Privacy Audit*).
-- **B. Provide Your Document:** Upload a PDF/photo or paste your text directly into the blank workspace box. *(To see how it works instantly, click **Load Sample**).*
-- **C. Run Audit & Review Fixes:** Click **Run Audit**. LEXGUARDIAN highlights risky clauses, verifies every quote word-for-word against the document, and provides a safer replacement clause you can copy.
-
-#### Quick Example Walkthrough
-- **Input Clause (Job Offer):** *"Employee must serve a 90-day notice period and pay Rs. 2,00,000 bond if leaving before 21/11/2028."*
-- **LEXGUARDIAN Detection:** Flags **[HIGH] Notice Period & Bond Penalty** because standard notice should not exceed 60 days.
-- **Suggested Safer Replacement:** *"Either party may terminate this agreement by providing 30 days written notice without financial penalty."*""")
+    if st.session_state.result is not None: st.bar_chart({k: sum(1 for f in st.session_state.result if f["risk_level"] == k) for k in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]})
+    else: st.info("Run an audit first.")
+with t3: st.json(st.session_state.meta or {"status": "Ready", "date": "21/11/2026", "format": "DD/MM/YYYY"})
+with t4: st.markdown("### LEXGUARDIAN\n- **Architected & Engineered by:** **WESING**\n- **Release Date:** 21/11/2026 (DD/MM/YYYY)\n\n#### How to Use (A, B, C)\n- **A. Pick Category & Mode:** Choose **Strict Audit** (every small loophole) or **Work Anyway** (major dealbreakers only).\n- **B. Add Document:** Upload PDF/Photo or paste text in the blank box *(or click **Load Sample**)*.\n- **C. Review Highlights:** Green cards show fair points; toggle **Show Loopholes & Fixes** whenever you want to inspect hidden traps and safer wording.\n\n#### Example\n- **Input:** *1. Employee may resign anytime. 2. Leaving within 24 months triggers a Rs. 2,00,000 bond.*\n- **Result:** Green card highlights flexible resignation; Red loophole card catches the hidden Rs. 2,00,000 contradiction.")
