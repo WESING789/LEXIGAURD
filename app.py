@@ -26,10 +26,10 @@ PRESETS = {
     "Loan & App Terms (Essentials Only)": {"rules": "1. Zero hidden foreclosure fees.\n2. Easy 1-click cancellation.", "sample": "SUBSCRIPTION TERMS (21/11/2026)\n1. TRIAL: Free 7-day trial.\n2. BILLING: Auto-locks into a 1-year non-refundable plan unless cancelled by post 60 days early."}
 }
 def read_img(f):
-    if not os.getenv("GOOGLE_API_KEY"): return "Upload PDF/text locally, or use the live website for photo OCR."
+    if not os.getenv("GOOGLE_API_KEY", "").strip(): return "Upload PDF/text locally, or use the live website for photo OCR."
     b = BytesIO(); Image.open(f).save(b, format="PNG")
     msg = HumanMessage(content=[{"type":"text","text":"Transcribe all text accurately."},{"type":"image_url","image_url":{"url":f"data:image/png;base64,{base64.b64encode(b.getvalue()).decode()}"}}])
-    return ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0).invoke([msg]).content
+    return ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0).invoke([msg]).content
 for k, v in [("doc_input", ""), ("result", None), ("good", []), ("tldr", []), ("meta", None)]:
     if k not in st.session_state: st.session_state[k] = v
 t1, t2, t3, t4 = st.tabs(["Audit Workspace", "Risk Analytics", "Security Certificate", "ⓘ Info & Button Guide"])
