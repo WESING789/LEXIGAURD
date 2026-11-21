@@ -31,7 +31,6 @@ def read_img(f):
     b = BytesIO(); Image.open(f).save(b, format="PNG")
     msg = HumanMessage(content=[{"type":"text","text":"Transcribe all text accurately."},{"type":"image_url","image_url":{"url":f"data:image/png;base64,{base64.b64encode(b.getvalue()).decode()}"}}])
     return ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=key, temperature=0).invoke([msg]).content
-
 for k, v in [("doc_input", ""), ("result", None), ("good", []), ("tldr", []), ("meta", None)]:
     if k not in st.session_state: st.session_state[k] = v
 t1, t2, t3, t4 = st.tabs(["Audit Workspace", "Risk Analytics", "Security Certificate", "ⓘ Info & Button Guide"])
@@ -78,3 +77,8 @@ with t1:
                     st.code(i.get("suggested_redline", ""), language="text")
                     rep += f"## {i.get('clause_topic','')}\n- Fix: {i.get('suggested_redline','')}\n\n"
                 st.download_button("Export Report", rep, "LEXGUARDIAN_Report.md", use_container_width=True)
+with t2:
+    if st.session_state.result is not None: st.bar_chart({k: sum(1 for f in st.session_state.result if f.get("risk_level") == k) for k in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]})
+    else: st.info("Run an audit first.")
+with t3: st.json(st.session_state.meta or {"status": "Ready", "date": "21/11/2026", "format": "DD/MM/YYYY", "storage": "Zero-Retention Memory"})
+with t4: st.markdown("### LEXGUARDIAN — User & Button Guide\n- **Architected & Engineered by:** **WESING** | **Date:** 21/11/2026 (DD/MM/YYYY)\n\n#### Button Guide\n- **Load Sample:** Loads a realistic test document.\n- **Clear Workspace:** Clears all text & results.\n- **Strict Audit vs. Work Anyway:** Strict catches every loophole; Work Anyway flags major dealbreakers only.\n- **Mask PII:** Hides Aadhaar/PAN/Email/Phone before scanning.\n- **Show Loopholes & Fixes:** Reveals red trap alerts and safer replacement wording.\n\n#### A-B-C Example\n- **A. Input:** *1. Employee may resign anytime. 2. Leaving within 24 months triggers a Rs. 2,00,000 bond.*\n- **B. Green Card:** Highlights flexible resignation.\n- **C. Red Card:** Catches the hidden Rs. 2,00,000 bond contradiction.")
