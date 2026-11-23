@@ -10,7 +10,7 @@ class AuditState(TypedDict):
 
 def get_llm():
     key = os.getenv("GROQ_API_KEY", "").strip()
-    if key: return ChatGroq(model="llama-3.3-70b-versatile", api_key=key, temperature=0)
+    if key: return ChatGroq(model="llama-3.1-8b-instant", api_key=key, temperature=0)
     return ChatOllama(model="qwen2.5:7b", temperature=0)
 
 def sanitize_and_fingerprint(text: str, mask_pii: bool = True):
