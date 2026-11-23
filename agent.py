@@ -10,7 +10,12 @@ class AuditState(TypedDict):
 
 def get_llm():
     key = os.getenv("GROQ_API_KEY", "").strip()
-    if key: return ChatGroq(model="llama-3.1-8b-instant", api_key=key, temperature=0)
+    if key:
+        import urllib.request
+        req = urllib.request.Request("https://groq.com", headers={"Authorization": f"Bearer {key}", "User-Agent": "Mozilla/5.0"})
+        models = [m["id"] for m in json.loads(urllib.request.urlopen(req, timeout=10).read()).get("data", []) if "whisper" not in m["id"] and "guard" not in m["id"] and "tts" not in m["id"]]
+        chosen = next((m for m in models if "70b" in m or "32b" in m or "8b" in m or "gpt" in m), models[0])
+        return ChatGroq(model=chosen, api_key=key, temperature=0)
     return ChatOllama(model="qwen2.5:7b", temperature=0)
 
 def sanitize_and_fingerprint(text: str, mask_pii: bool = True):
