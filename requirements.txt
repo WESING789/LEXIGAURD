@@ -1,7 +1,7 @@
 streamlit
 langgraph
 langchain-ollama
-langchain-google-genai
+langchain-groq
 pydantic
 pypdf
 pillow
