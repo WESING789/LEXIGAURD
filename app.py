@@ -1,9 +1,10 @@
+import critic_engine, ui_upgrades
 import streamlit as st
 from pypdf import PdfReader
 from agent import auditor_app, sanitize_and_fingerprint, ask_doc_question
 st.set_page_config(page_title="LEXGUARDIAN | WE SEE ALL", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""<style>
-@keyframes spin369 { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spinWE SEE ALL{ 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 @keyframes pulseLux { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
 .stApp { background: radial-gradient(circle at top right, #17140d 0%, #070a12 45%, #05070d 100%); }
 .lex-bar{background:linear-gradient(135deg,#070911 0%,#111622 55%,#1a160e 100%);border:1px solid rgba(251,191,36,0.45);border-radius:16px;padding:1.45rem 1.9rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:0.95rem;box-shadow:0 14px 36px rgba(0,0,0,0.65)}
@@ -18,11 +19,11 @@ div.stDownloadButton > button { background: linear-gradient(135deg, #0f172a 0%, 
 .stTabs [data-baseweb="tab-list"] { background: rgba(15,23,42,0.85); border: 1px solid rgba(251,191,36,0.28); border-radius: 12px; padding: 5px; }
 .stTabs [aria-selected="true"] { background: linear-gradient(90deg, rgba(245,158,11,0.25), rgba(45,212,191,0.2)) !important; color: #fde68a !important; border-bottom: 2px solid #fbbf24 !important; }
 .lux-loader{background:linear-gradient(135deg,rgba(15,23,42,0.96),rgba(28,24,14,0.96));border:1px solid rgba(251,191,36,0.55);border-radius:12px;padding:1.25rem;text-align:center;margin:0.8rem 0;animation:pulseLux 2s infinite}
-.lux-spin{display:inline-block;animation:spin369 2.6s linear infinite}
+.lux-spin{display:inline-block;animation:spinWE SEE ALL2.6s linear infinite}
 .good-card{background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(251,191,36,0.04));border:1px solid rgba(251,191,36,0.22);border-left:4px solid #10b981;border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.65rem}
 .bad-card{background:linear-gradient(135deg,rgba(239,68,68,0.13),rgba(251,191,36,0.04));border:1px solid rgba(251,191,36,0.22);border-left:4px solid #ef4444;border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.55rem}
 .hint-box{background:linear-gradient(90deg,rgba(251,191,36,0.09),rgba(45,212,191,0.06));border:1px solid rgba(251,191,36,0.32);border-radius:9px;padding:0.6rem 0.9rem;font-size:0.84rem;color:#fef3c7;margin-bottom:0.6rem}
-</style><div class="lex-bar"><div style="display:flex;align-items:center;gap:1.25rem"><svg width="62" height="62" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="platSilver" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></linearGradient><linearGradient id="tealGlow" x1="0" y1="50" x2="100" y2="50"><stop offset="0%" stop-color="#5eead4"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" stroke="url(#platSilver)" stroke-width="2.4" fill="rgba(251,191,36,0.05)"/><polygon points="50,14 81,68 19,68" stroke="rgba(251,191,36,0.45)" stroke-width="1.4" fill="none"/><polygon points="50,86 81,32 19,32" stroke="rgba(45,212,191,0.45)" stroke-width="1.4" fill="none"/><path d="M22 39 H40 L50 50 L60 61 H78 A11 11 0 0 0 78 39 H60 L50 50 L40 61 H22 A11 11 0 0 1 22 39 Z" stroke="url(#tealGlow)" stroke-width="3.6" stroke-linejoin="round" fill="none"/><circle cx="50" cy="50" r="3.2" fill="#fde68a"/></svg><div><div class="lex-h1">LEXGUARDIAN</div><div class="lux-motto">WE SEE ALL</div><div class="lex-sub">Skip the fine print — catch hidden loopholes, contradictions &amp; traps instantly.</div></div></div><div class="lux-badge">3•6•9 SYMMETRY • SHA-256</div></div>
+</style><div class="lex-bar"><div style="display:flex;align-items:center;gap:1.25rem"><svg width="46" height="46" viewBox="0 0 100 100" fill="none"><path d="M10 22 L28 84 L50 42 L72 84 L90 22 L76 22 L66 58 L50 28 L34 58 L24 22 Z" fill="url(#plat)" stroke="#00F5D4" stroke-width="2.5"/><defs><linearGradient id="plat" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stop-color="#FFF"/><stop offset="100%" stop-color="#64748B"/></linearGradient></defs></svg><div><div class="lex-h1">LEXGUARDIAN</div><div class="lux-motto">WE SEE ALL</div><div class="lex-sub">Skip the fine print — catch hidden loopholes, contradictions &amp; traps instantly.</div></div></div><div class="lux-badge">WE SEE ALL • SHA-256</div></div>
 """, unsafe_allow_html=True)
 with st.expander("New here? Quick 3-Step Guide (Click to hide/show)", expanded=True):
     g1, g2, g3 = st.columns(3)
@@ -38,6 +39,7 @@ PRESETS = {
 }
 for k, v in [("doc_input", ""), ("last_doc", ""), ("result", None), ("good", []), ("tldr", []), ("meta", None)]:
     if k not in st.session_state: st.session_state[k] = v
+ui_upgrades.inject_luxury_w_theme()
 t1, t2, t3, t4 = st.tabs(["Audit Workspace", "Risk Analytics", "Security Certificate", "ⓘ Info & Button Guide"])
 with t1:
     c1, c2 = st.columns([1, 1.2], gap="large")
@@ -58,7 +60,7 @@ with t1:
         st.markdown(f'<div class="hint-box"><b>Active:</b> {"Mask PII ON (IDs Scrubbed)" if pii_on else "Mask PII OFF"} • {"Showing Loopholes & Fixes" if reveal_details else "Summary View"}</div>', unsafe_allow_html=True)
         if run_btn and raw_text.strip():
             loader = st.empty()
-            loader.markdown('<div class="lux-loader"><div class="lux-spin"><svg width="42" height="42" viewBox="0 0 64 64" fill="none"><path d="M18 10H46L34 32L46 54H18L30 32L18 10Z" stroke="#cbd5e1" stroke-width="3" fill="rgba(203,213,225,0.12)"/><path d="M16 32C16 25 26 25 32 32C38 39 48 39 48 32C48 25 38 25 32 32C26 39 16 39 16 32Z" stroke="#2dd4bf" stroke-width="2.5"/></svg></div><div style="color:#5eead4;font-weight:700;margin-top:0.4rem">Please wait — scanning fine print &amp; detecting hidden loopholes...</div></div>', unsafe_allow_html=True)
+            loader.markdown('<div class="lux-loader"><div class="lux-spin"><svg width="46" height="46" viewBox="0 0 100 100" fill="none"><path d="M10 22 L28 84 L50 42 L72 84 L90 22 L76 22 L66 58 L50 28 L34 58 L24 22 Z" fill="url(#plat)" stroke="#00F5D4" stroke-width="2.5"/><defs><linearGradient id="plat" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stop-color="#FFF"/><stop offset="100%" stop-color="#64748B"/></linearGradient></defs></svg></div><div style="color:#5eead4;font-weight:700;margin-top:0.4rem">Please wait — scanning fine print &amp; detecting hidden loopholes...</div></div>', unsafe_allow_html=True)
             try:
                 clean, meta = sanitize_and_fingerprint(raw_text, mask_pii=pii_on)
                 out = auditor_app.invoke({"contract_text": clean, "playbook_rules": playbook, "retries": 0, "hallucination_errors": [], "security_metadata": meta})
@@ -92,6 +94,19 @@ with t1:
             q = st.text_input("Ask a quick question about this document:", placeholder="e.g. Can they terminate me without notice? / Is my deposit refundable?")
             if q and st.session_state.last_doc:
                 with st.spinner("Checking document..."): st.success(ask_doc_question(st.session_state.last_doc, q))
+
+    st.markdown("---")
+    st.markdown("### <span style='color:#00F5D4;'>DEVIL'S ADVOCATE — RUTHLESS CONTRACT CRITIC</span>", unsafe_allow_html=True)
+    _u1, _u2 = st.columns()
+    _pdf = _u1.file_uploader("Upload Contract PDF or TXT:", type=["pdf", "txt"], key="da_pdf")
+    _paste = _u2.text_area("Or Paste Contract Text Here:", height=110, key="da_in")
+    _lang = st.selectbox("Extra Language Block (Optional):", ["None", "Hinglish", "Hindi", "Tamil", "Marathi", "Bengali", "Spanish"], key="da_lang")
+    _txt = (critic_engine.extract_uploaded_text(_pdf) if _pdf else "") or _paste
+    if st.button("UNLEASH DEVIL'S ADVOCATE", key="da_go") and _txt.strip():
+        with st.spinner("Devil's Advocate is cross-examining every clause..."):
+            st.session_state["da_res"] = critic_engine.run_adversarial_critic(_txt, pref_lang=_lang)
+            st.session_state["pers_plan"] = ""
+    ui_upgrades.render_devils_advocate_suite(_txt, _lang)
 with t2:
     if st.session_state.result is not None: st.bar_chart({k: sum(1 for f in st.session_state.result if f.get("risk_level") == k) for k in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]})
     else: st.info("Run an audit first.")
