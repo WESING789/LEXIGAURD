@@ -1,4 +1,4 @@
-import streamlit as st, critic_engine
+import hashlib, streamlit as st, critic_engine
 
 def inject_luxury_theme():
     st.markdown("""<style>
@@ -26,6 +26,13 @@ def render_yinyang_loader(msg: str = "Devil's Advocate is cross-examining every 
       <div class="lg-cw"><svg width="52" height="52" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/><path d="M50 15 A35 35 0 0 1 50 85 A17.5 17.5 0 0 1 50 50 A17.5 17.5 0 0 0 50 15 Z" fill="#FF2A6D"/><circle cx="50" cy="32.5" r="5" fill="#0B0E17"/><circle cx="50" cy="67.5" r="5" fill="#E2E8F0"/></svg></div>
       <div class="lg-ccw"><svg width="52" height="52" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#00F5D4" stroke-width="3" stroke-dasharray="28 16"/></svg></div>
     </div><b style="color:#F8FAFC;">{msg}</b></div>"""
+
+def sync_da_workspace(txt: str):
+    h = hashlib.sha256(txt.strip().encode()).hexdigest() if txt.strip() else ""
+    if st.session_state.get("da_hash") != h:
+        st.session_state["da_hash"] = h
+        st.session_state["da_res"] = None
+        st.session_state["pers_plan"] = ""
 def render_devils_advocate_suite(txt: str, pref_lang: str):
     res = st.session_state.get("da_res")
     if not res: return
@@ -56,26 +63,47 @@ def render_risk_analytics():
     good_cnt = max(1, len(st.session_state.get("good", [])))
     findings = da.get("findings", [])
     if not da and not st.session_state.get("result"):
-        st.info("Run an Audit or Devil's Advocate scan in Audit Workspace first to unlock live charts.")
+        st.info("Run an Audit or Devil's Advocate scan in Audit Workspace first to unlock live Risk Analytics.")
         return
-    score = int(da.get("safety_score", 60))
+    curr = st.selectbox("Display Currency (Regional Default: India INR):", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0, key="ra_curr")
+    sym = curr.split()
+    score, verdict = int(da.get("safety_score", 60)), da.get("verdict", "CAUTION")
     crit = sum(1 for x in findings if x.get("severity") == "CRITICAL")
     high = sum(1 for x in findings if x.get("severity") == "HIGH")
     med = sum(1 for x in findings if x.get("severity") not in ("CRITICAL", "HIGH"))
     m1, m2, m3 = st.columns(3)
-    m1.metric("Overall Safety Score", f"{score}/100", da.get("verdict", "CAUTION"))
-    m2.metric("Hidden Traps Found", len(findings), f"{crit} Critical")
-    m3.metric("Safe Clauses Verified", good_cnt, "Protected")
+    m1.metric("Contract Safety Score", f"{score} / 100", verdict)
+    m2.metric("Hidden Traps Detected", f"{len(findings)} Traps", f"{crit} Critical")
+    m3.metric("Verified Safe Clauses", f"{good_cnt} Clauses", "Protected")
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("#### Safe Clauses vs. Risk Traps (Pie Chart)")
         tot = good_cnt + max(1, len(findings))
         deg = int((good_cnt / tot) * 360)
-        st.markdown(f"<div style='display:flex;align-items:center;gap:18px;padding:14px;border:1px solid #00F5D4;border-radius:12px;background:#090C14;'><div style='width:110px;height:110px;border-radius:50%;background:conic-gradient(#00F5D4 0deg {deg}deg, #FF2A6D {deg}deg 360deg);'></div><div><p style='color:#00F5D4;margin:4px 0;'><b>Safe Clauses:</b> {good_cnt} ({int(deg/3.6)}%)</p><p style='color:#FF2A6D;margin:4px 0;'><b>Risk Traps:</b> {len(findings)} ({100-int(deg/3.6)}%)</p></div></div>", unsafe_allow_html=True)
+        safe_pct = int(deg / 3.6)
+        st.markdown(f"""<div style="border:1px solid rgba(0,245,212,0.45);border-radius:14px;padding:18px;background:#090C14;height:210px;">
+        <b style="color:#E2E8F0;">Clause Protection Ratio (Donut Chart)</b>
+        <div style="display:flex;align-items:center;gap:20px;margin-top:14px;">
+          <div style="width:115px;height:115px;border-radius:50%;background:radial-gradient(#090C14 42%, transparent 43%), conic-gradient(#00F5D4 0deg {deg}deg, #FF2A6D {deg}deg 360deg);flex-shrink:0;"></div>
+          <div><p style="color:#00F5D4;margin:6px 0;font-weight:700;">● Safe Clauses: {good_cnt} ({safe_pct}%)</p>
+          <p style="color:#FF2A6D;margin:6px 0;font-weight:700;">● Risk Traps: {len(findings)} ({100-safe_pct}%)</p></div>
+        </div></div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown("#### Trap Severity Breakdown (Bar Chart)")
-        st.bar_chart({"Count": {"1. Critical": crit, "2. High": high, "3. Medium": med}}, color="#FF2A6D")
+        st.markdown(f"""<div style="border:1px solid rgba(0,245,212,0.45);border-radius:14px;padding:18px;background:#090C14;height:210px;">
+        <b style="color:#E2E8F0;">Trap Severity Breakdown</b>
+        <p style="color:#FF2A6D;margin:12px 0 4px 0;font-weight:700;">Critical Traps: {crit}</p>
+        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, crit*33)}%;background:#FF2A6D;height:10px;border-radius:6px;"></div></div>
+        <p style="color:#F472B6;margin:10px 0 4px 0;font-weight:700;">High Risk Traps: {high}</p>
+        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, high*33)}%;background:#F472B6;height:10px;border-radius:6px;"></div></div>
+        <p style="color:#00F5D4;margin:10px 0 4px 0;font-weight:700;">Medium / Minor: {med}</p>
+        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, med*33)}%;background:#00F5D4;height:10px;border-radius:6px;"></div></div>
+        </div>""", unsafe_allow_html=True)
     pens = da.get("penalty_numbers", {"late_fees": 0, "leave_cuts": 0, "early_exit": 0})
-    st.markdown("#### Estimated Financial Penalty Exposure (Bar Chart)")
-    st.bar_chart({"Estimated Loss (Rs/$)": {"Late Fees": pens.get("late_fees", 0), "Leave Cuts": pens.get("leave_cuts", 0), "Early Exit Penalty": pens.get("early_exit", 0)}}, color="#00F5D4")
-    st.success(f"**Plain-English Takeaway:** {da.get('bottom_line', 'Review highlighted traps before signing.')}")
+    lf, lc, ee = int(pens.get("late_fees", 0)), int(pens.get("leave_cuts", 0)), int(pens.get("early_exit", 0))
+    st.markdown(f"""<div style="border:1px solid #00F5D4;border-radius:14px;padding:18px;background:#090C14;margin-top:12px;">
+    <b style="color:#00F5D4;">ESTIMATED FINANCIAL PENALTY EXPOSURE ({curr})</b>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;text-align:center;">
+      <div style="padding:12px;border:1px solid rgba(255,42,109,0.4);border-radius:10px;background:#0B0F19;"><small style="color:#94A3B8;">Late Payment Fees</small><div style="color:#FF2A6D;font-size:1.3rem;font-weight:800;">{sym}{lf:,}</div></div>
+      <div style="padding:12px;border:1px solid rgba(255,42,109,0.4);border-radius:10px;background:#0B0F19;"><small style="color:#94A3B8;">Extra Leave / Pay Cuts</small><div style="color:#F472B6;font-size:1.3rem;font-weight:800;">{sym}{lc:,}</div></div>
+      <div style="padding:12px;border:1px solid rgba(0,245,212,0.4);border-radius:10px;background:#0B0F19;"><small style="color:#94A3B8;">Early Exit / Deposit Loss</small><div style="color:#00F5D4;font-size:1.3rem;font-weight:800;">{sym}{ee:,}</div></div>
+    </div></div>""", unsafe_allow_html=True)
+    st.success(f"**Executive Takeaway:** {da.get('bottom_line', 'Review the highlighted traps before signing.')}")

@@ -21,19 +21,16 @@ def _smart_llm(prompt: str) -> str:
                     return json.loads(r.read().decode())["choices"]["message"]["content"]
             except Exception:
                 continue
-    try:
-        import agent
-        return agent.invoke_llm(prompt)
-    except Exception as e:
-        return json.dumps({"safety_score": 25, "verdict": "DANGER", "bottom_line": f"API Notice: {e}", "findings": []})
-CRITIC_PROMPT = """You are LEXGUARDIAN's Ruthless Devil's Advocate Legal Critic. Be STRICT. Never ignore fine print, asymmetric rules, bonds, deposit forfeitures, unilateral edits, or missing refund/exit rights. Even if a contract looks friendly, expose EVERY hidden trap.
+    return "{}"
+
+CRITIC_PROMPT = """You are LEXGUARDIAN's Ruthless Devil's Advocate Critic. Be HYPER-STRICT. Never give 0 risks unless a contract is 100% one-sided in the user's favor. Catch bonds, deposit forfeitures, unilateral changes, hidden charges, notice traps, and missing exit/refund rights. Use INR (Rs.) for Indian documents.
 Return ONLY valid JSON:
-{"safety_score": 25, "verdict": "DANGER", "bottom_line": "1 blunt sentence telling an everyday person why to be careful",
- "whatsapp_msg": "polite 3-line WhatsApp message asking to fix the traps",
+{"safety_score": 30, "verdict": "DANGER", "bottom_line": "1 blunt sentence telling a normal person whether to sign",
+ "whatsapp_msg": "polite 3-line WhatsApp message asking for fixes",
  "penalty_numbers": {"late_fees": 1500, "leave_cuts": 3000, "early_exit": 10000},
- "mistake_simulator": {"avg_yearly_loss": "estimated yearly loss in Rs/$", "breakdown": ["1. Late payments: ...", "2. Extra leaves: ...", "3. Early exit: ..."]},
+ "mistake_simulator": {"avg_yearly_loss": "estimated yearly loss in INR (Rs.)", "breakdown": ["1. Late payments: ...", "2. Extra leaves: ...", "3. Early exit: ..."]},
  "findings": [{"severity": "CRITICAL", "exact_quote": "verbatim phrase from text or MISSING CLAUSE", "plain_english": "1 simple sentence",
-   "why_it_hurts": "how the other party can weaponize this", "pref_translation": "translate into PREFERRED_LANG (or empty if None)", "counter_email": "2-sentence fix request"}]}"""
+   "why_it_hurts": "real-life impact", "pref_translation": "translate into PREFERRED_LANG (or empty if None)", "counter_email": "2-sentence fix request"}]}"""
 
 def extract_uploaded_text(f) -> str:
     if not f: return ""
@@ -46,7 +43,7 @@ def run_adversarial_critic(text: str, pref_lang: str = "None") -> dict:
     raw = re.sub(r"<think>.*?</think>", "", _smart_llm(f"{CRITIC_PROMPT}\nPREFERRED_LANG: {pref_lang}\nCONTRACT:\n{text[:12000]}"), flags=re.S)
     m = re.search(r"\{.*\}", raw, flags=re.S)
     if not m:
-        return {"safety_score": 40, "verdict": "CAUTION", "bottom_line": "Strict scan incomplete — please retry.", "findings": []}
+        return {"safety_score": 40, "verdict": "CAUTION", "bottom_line": "Strict scan incomplete — click Unleash Devil's Advocate to retry.", "findings": []}
     return json.loads(m.group(0))
 
 def build_negotiation_email(findings: list) -> str:
@@ -54,5 +51,5 @@ def build_negotiation_email(findings: list) -> str:
     return f"Hi,\n\nBefore signing, could we clarify:\n{items or 'Looks balanced!'}\n\nBest regards,"
 
 def run_personalized_simulation(text: str, habits: str, pref_lang: str = "None") -> str:
-    p = f"Strict Devil's Advocate: Based ONLY on this contract and USER HABITS ({habits}), calculate exact fines, pay cuts & deposit loss, and give a clear survival plan in easy English (plus {pref_lang} if not None)."
+    p = f"Strict Devil's Advocate: Based ONLY on this contract and USER HABITS ({habits}), calculate exact fines, pay cuts & deposit loss in INR (Rs.), and give a clear survival plan in easy English (plus {pref_lang} if not None)."
     return re.sub(r"<think>.*?</think>", "", _smart_llm(f"{p}\nCONTRACT:\n{text[:12000]}"), flags=re.S).strip()

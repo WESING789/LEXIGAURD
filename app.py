@@ -98,15 +98,20 @@ with t1:
     st.markdown('---')
     st.markdown('### DEVIL\'S ADVOCATE — RUTHLESS CONTRACT CRITIC')
     u1, u2 = st.columns(2)
-    pdf, paste = u1.file_uploader('Upload PDF/TXT (or auto-uses Audit doc):', type=['pdf','txt']), u2.text_area('Or Paste Text:', height=100)
-    lang = st.selectbox('Extra Language Block:', ['None','Hinglish','Hindi','Tamil','Marathi','Bengali','Spanish'])
+    pdf = u1.file_uploader('Upload PDF/TXT (or auto-uses Audit doc):', type=['pdf','txt'], key='da_pdf')
+    paste = u2.text_area('Or Paste Contract Text:', height=100, key='da_txt')
+    b1, b2, b3 = st.columns([2, 1, 1])
+    lang = b1.selectbox('Extra Language Block:', ['None','Hinglish','Hindi','Tamil','Marathi','Bengali','Spanish'], key='da_lang')
     txt = (critic_engine.extract_uploaded_text(pdf) if pdf else '') or paste.strip() or st.session_state.get('last_doc', '') or st.session_state.get('doc_input', '')
-    if st.session_state.get('result') and txt and st.session_state.get('da_src') != txt:
-        ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader('Devil\'s Advocate is auditing for hidden traps...'), unsafe_allow_html=True)
-        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['da_src'] = txt; ld.empty()
-    if st.button("UNLEASH DEVIL'S ADVOCATE") and txt.strip():
+    ui_upgrades.sync_da_workspace(txt)
+    if b3.button('Reset Workspace', key='da_clr'):
+        st.session_state['da_res'] = None; st.session_state['pers_plan'] = ''; st.session_state['da_hash'] = ''
+    if st.session_state.get('result') and txt and not st.session_state.get('da_res'):
+        ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader('Devil\'s Advocate is cross-examining...'), unsafe_allow_html=True)
+        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); ld.empty()
+    if b2.button("UNLEASH DEVIL'S ADVOCATE", key='da_go') and txt.strip():
         ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader(), unsafe_allow_html=True)
-        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['da_src'] = txt; st.session_state['pers_plan'] = ''; ld.empty()
+        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['pers_plan'] = ''; ld.empty()
     ui_upgrades.render_devils_advocate_suite(txt, lang)
 with t2:
     ui_upgrades.render_risk_analytics()
