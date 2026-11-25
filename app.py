@@ -23,7 +23,7 @@ div.stDownloadButton > button { background: linear-gradient(135deg, #0f172a 0%, 
 .good-card{background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(251,191,36,0.04));border:1px solid rgba(251,191,36,0.22);border-left:4px solid #10b981;border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.65rem}
 .bad-card{background:linear-gradient(135deg,rgba(239,68,68,0.13),rgba(251,191,36,0.04));border:1px solid rgba(251,191,36,0.22);border-left:4px solid #ef4444;border-radius:10px;padding:0.85rem 1rem;margin-bottom:0.55rem}
 .hint-box{background:linear-gradient(90deg,rgba(251,191,36,0.09),rgba(45,212,191,0.06));border:1px solid rgba(251,191,36,0.32);border-radius:9px;padding:0.6rem 0.9rem;font-size:0.84rem;color:#fef3c7;margin-bottom:0.6rem}
-</style><div class="lex-bar"><div style="display:flex;align-items:center;gap:1.25rem"><svg width="62" height="62" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="platSilver" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></linearGradient><linearGradient id="tealGlow" x1="0" y1="50" x2="100" y2="50"><stop offset="0%" stop-color="#5eead4"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" stroke="url(#platSilver)" stroke-width="2.4" fill="rgba(251,191,36,0.05)"/><polygon points="50,14 81,68 19,68" stroke="rgba(251,191,36,0.45)" stroke-width="1.4" fill="none"/><polygon points="50,86 81,32 19,32" stroke="rgba(45,212,191,0.45)" stroke-width="1.4" fill="none"/><path d="M22 39 H40 L50 50 L60 61 H78 A11 11 0 0 0 78 39 H60 L50 50 L40 61 H22 A11 11 0 0 1 22 39 Z" stroke="url(#tealGlow)" stroke-width="3.6" stroke-linejoin="round" fill="none"/><circle cx="50" cy="50" r="3.2" fill="#fde68a"/></svg><div><div class="lex-h1">LEXGUARDIAN</div><div class="lux-motto">WE SEE ALL</div><div class="lex-sub">Skip the fine print — catch hidden loopholes, contradictions &amp; traps instantly.</div></div></div><div class="lux-badge">3•6•9 <svg width="24" height="24" viewBox="0 0 100 100" fill="none" style="vertical-align:middle;"><path d="M10 22 L28 84 L50 42 L72 84 L90 22 L76 22 L66 58 L50 28 L34 58 L24 22 Z" fill="#E2E8F0" stroke="#00F5D4" stroke-width="3"/></svg> • SHA-256</div></div>
+</style><div class="lex-bar"><div style="display:flex;align-items:center;gap:1.25rem"><svg width="62" height="62" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="platSilver" x1="0" y1="0" x2="100" y2="100"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></linearGradient><linearGradient id="tealGlow" x1="0" y1="50" x2="100" y2="50"><stop offset="0%" stop-color="#5eead4"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" stroke="url(#platSilver)" stroke-width="2.4" fill="rgba(251,191,36,0.05)"/><polygon points="50,14 81,68 19,68" stroke="rgba(251,191,36,0.45)" stroke-width="1.4" fill="none"/><polygon points="50,86 81,32 19,32" stroke="rgba(45,212,191,0.45)" stroke-width="1.4" fill="none"/><path d="M22 39 H40 L50 50 L60 61 H78 A11 11 0 0 0 78 39 H60 L50 50 L40 61 H22 A11 11 0 0 1 22 39 Z" stroke="url(#tealGlow)" stroke-width="3.6" stroke-linejoin="round" fill="none"/><circle cx="50" cy="50" r="3.2" fill="#fde68a"/></svg><div><div class="lex-h1">LEXGUARDIAN</div><div class="lux-motto">WE SEE ALL</div><div class="lex-sub">Skip the fine print — catch hidden loopholes, contradictions &amp; traps instantly.</div></div></div><div class="lux-badge">3•6•9 <svg width="34" height="22" viewBox="0 0 120 70" fill="none" style="vertical-align:middle;margin:0 4px;"><rect x="5" y="5" width="110" height="60" rx="14" stroke="#E2E8F0" stroke-width="3"/><path d="M36 22 H48 L72 48 H84 Q96 48 96 35 Q96 22 84 22 H72 L48 48 H36 Q24 48 24 35 Q24 22 36 22 Z" stroke="#00F5D4" stroke-width="5" stroke-linejoin="round"/></svg> • SHA-256</div></div>
 """, unsafe_allow_html=True)
 with st.expander("New here? Quick 3-Step Guide (Click to hide/show)", expanded=True):
     g1, g2, g3 = st.columns(3)
@@ -39,7 +39,7 @@ PRESETS = {
 }
 for k, v in [("doc_input", ""), ("last_doc", ""), ("result", None), ("good", []), ("tldr", []), ("meta", None)]:
     if k not in st.session_state: st.session_state[k] = v
-ui_upgrades.inject_luxury_w_theme()
+ui_upgrades.inject_luxury_theme()
 t1, t2, t3, t4 = st.tabs(["Audit Workspace", "Risk Analytics", "Security Certificate", "ⓘ Info & Button Guide"])
 with t1:
     c1, c2 = st.columns([1, 1.2], gap="large")
@@ -60,7 +60,7 @@ with t1:
         st.markdown(f'<div class="hint-box"><b>Active:</b> {"Mask PII ON (IDs Scrubbed)" if pii_on else "Mask PII OFF"} • {"Showing Loopholes & Fixes" if reveal_details else "Summary View"}</div>', unsafe_allow_html=True)
         if run_btn and raw_text.strip():
             loader = st.empty()
-            loader.markdown(ui_upgrades.dual_overlap_loader(), unsafe_allow_html=True)
+            loader.markdown(ui_upgrades.squared_infinity_loader(), unsafe_allow_html=True)
             try:
                 clean, meta = sanitize_and_fingerprint(raw_text, mask_pii=pii_on)
                 out = auditor_app.invoke({"contract_text": clean, "playbook_rules": playbook, "retries": 0, "hallucination_errors": [], "security_metadata": meta})
@@ -96,13 +96,13 @@ with t1:
                 with st.spinner("Checking document..."): st.success(ask_doc_question(st.session_state.last_doc, q))
 
     st.markdown('---')
-    st.markdown('### DEVIL\'S ADVOCATE — RUTHLESS CRITIC')
+    st.markdown('### DEVIL\'S ADVOCATE — RUTHLESS CONTRACT CRITIC')
     u1, u2 = st.columns(2)
     pdf, paste = u1.file_uploader('Upload PDF/TXT (or auto-uses Audit doc):', type=['pdf','txt']), u2.text_area('Or Paste Text:', height=100)
     lang = st.selectbox('Extra Language Block:', ['None','Hinglish','Hindi','Tamil','Marathi','Bengali','Spanish'])
     txt = (critic_engine.extract_uploaded_text(pdf) if pdf else '') or paste.strip() or st.session_state.get('last_doc', '') or st.session_state.get('doc_input', '')
     if st.session_state.get('result') and txt and st.session_state.get('da_src') != txt:
-        ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader('Auto-generating Devil\'s Advocate Report...'), unsafe_allow_html=True)
+        ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader('Devil\'s Advocate is auditing for hidden traps...'), unsafe_allow_html=True)
         st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['da_src'] = txt; ld.empty()
     if st.button("UNLEASH DEVIL'S ADVOCATE") and txt.strip():
         ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader(), unsafe_allow_html=True)

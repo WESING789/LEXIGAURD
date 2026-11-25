@@ -1,29 +1,30 @@
 import streamlit as st, critic_engine
 
-def inject_luxury_w_theme():
+def inject_luxury_theme():
     st.markdown("""<style>
-    @keyframes orbitCW { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes orbitCCW { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
-    .spin-cw { position:absolute; inset:0; transform-origin:50% 50%; animation:orbitCW 1.4s linear infinite; }
-    .spin-ccw { position:absolute; inset:0; transform-origin:50% 50%; animation:orbitCCW 1.1s linear infinite; }
+    @keyframes lgSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes lgPulse { 0%, 100% { filter: drop-shadow(0 0 6px #00F5D4); } 50% { filter: drop-shadow(0 0 16px #FF2A6D); } }
+    .lg-spin { transform-origin: 50% 50%; animation: lgSpin 1.2s linear infinite; }
+    .lg-pulse { animation: lgPulse 1.6s ease-in-out infinite; }
     .stApp { background: radial-gradient(circle at top, #0F121D 0%, #06070A 100%); color: #F1F5F9; }
     .stTabs [aria-selected="true"] { border-bottom: 2px solid #00F5D4 !important; color: #00F5D4 !important; }
     .stButton>button { background: linear-gradient(135deg, #FF2A6D 0%, #9D174D 100%); color: #FFF; border: 1px solid #00F5D4; border-radius: 10px; font-weight: 700; }
     </style>""", unsafe_allow_html=True)
 
-def dual_overlap_loader(msg: str = "LEXGUARDIAN is auditing every clause..."):
+def squared_infinity_loader(msg: str = "Please wait — scanning fine print & detecting hidden loopholes..."):
     return f"""<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border:1px solid #00F5D4;border-radius:12px;background:#090C14;margin:10px 0;">
-    <div style="position:relative;width:54px;height:54px;flex-shrink:0;">
-      <div class="spin-cw"><svg width="54" height="54" viewBox="0 0 100 100"><polygon points="50,5 91,27 91,73 50,95 9,73 9,27" fill="none" stroke="#00F5D4" stroke-width="5"/><ellipse cx="50" cy="50" rx="42" ry="14" fill="none" stroke="#E2E8F0" stroke-width="3"/></svg></div>
-      <div class="spin-ccw"><svg width="54" height="54" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="14" ry="42" fill="none" stroke="#FF2A6D" stroke-width="4.5"/><path d="M24 34 L38 72 L50 48 L62 72 L76 34" fill="none" stroke="#FF2A6D" stroke-width="6" stroke-linecap="round"/></svg></div>
-    </div><b style="color:#F8FAFC;">{msg}</b></div>"""
+    <svg class="lg-pulse" width="54" height="36" viewBox="0 0 120 70" fill="none" style="flex-shrink:0;">
+      <rect x="6" y="6" width="108" height="58" rx="14" stroke="#E2E8F0" stroke-width="2.5" stroke-dasharray="18 8"/>
+      <path d="M36 22 H48 L72 48 H84 Q96 48 96 35 Q96 22 84 22 H72 L48 48 H36 Q24 48 24 35 Q24 22 36 22 Z" stroke="#00F5D4" stroke-width="4" stroke-linejoin="round"/>
+    </svg><b style="color:#5EEAD4;">{msg}</b></div>"""
 
 def render_yinyang_loader(msg: str = "Devil's Advocate is cross-examining every clause..."):
     return f"""<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border:1px solid #FF2A6D;border-radius:12px;background:#090C14;margin:10px 0;">
-    <div style="position:relative;width:54px;height:54px;flex-shrink:0;">
-      <div class="spin-cw"><svg width="54" height="54" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/><path d="M50 16 A34 34 0 0 1 50 84 A17 17 0 0 1 50 50 A17 17 0 0 0 50 16 Z" fill="#FF2A6D"/><circle cx="50" cy="33" r="5" fill="#0B0E17"/><circle cx="50" cy="67" r="5" fill="#E2E8F0"/></svg></div>
-      <div class="spin-ccw"><svg width="54" height="54" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#FF2A6D" stroke-width="3.5" stroke-dasharray="28 16"/><ellipse cx="50" cy="50" rx="46" ry="15" fill="none" stroke="#00F5D4" stroke-width="2.5"/></svg></div>
-    </div><b style="color:#F8FAFC;">{msg}</b></div>"""
+    <svg width="46" height="46" viewBox="0 0 100 100" style="flex-shrink:0;">
+      <g class="lg-spin"><circle cx="50" cy="50" r="42" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/>
+      <path d="M50 8 A42 42 0 0 1 50 92 A21 21 0 0 1 50 50 A21 21 0 0 0 50 8 Z" fill="#FF2A6D"/>
+      <circle cx="50" cy="29" r="6" fill="#0B0E17"/><circle cx="50" cy="71" r="6" fill="#E2E8F0"/></g>
+    </svg><b style="color:#F8FAFC;">{msg}</b></div>"""
 def render_devils_advocate_suite(txt: str, pref_lang: str):
     res = st.session_state.get("da_res")
     if not res: return
