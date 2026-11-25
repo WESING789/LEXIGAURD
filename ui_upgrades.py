@@ -2,10 +2,10 @@ import streamlit as st, critic_engine
 
 def inject_luxury_w_theme():
     st.markdown("""<style>
-    @keyframes lgSpinCW { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes lgSpinCCW { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
-    .lg-cw { transform-box: fill-box; transform-origin: center; animation: lgSpinCW 1.3s linear infinite; }
-    .lg-ccw { transform-box: fill-box; transform-origin: center; animation: lgSpinCCW 1.0s linear infinite; }
+    @keyframes orbitCW { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes orbitCCW { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+    .spin-cw { position:absolute; inset:0; transform-origin:50% 50%; animation:orbitCW 1.4s linear infinite; }
+    .spin-ccw { position:absolute; inset:0; transform-origin:50% 50%; animation:orbitCCW 1.1s linear infinite; }
     .stApp { background: radial-gradient(circle at top, #0F121D 0%, #06070A 100%); color: #F1F5F9; }
     .stTabs [aria-selected="true"] { border-bottom: 2px solid #00F5D4 !important; color: #00F5D4 !important; }
     .stButton>button { background: linear-gradient(135deg, #FF2A6D 0%, #9D174D 100%); color: #FFF; border: 1px solid #00F5D4; border-radius: 10px; font-weight: 700; }
@@ -13,22 +13,17 @@ def inject_luxury_w_theme():
 
 def dual_overlap_loader(msg: str = "LEXGUARDIAN is auditing every clause..."):
     return f"""<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border:1px solid #00F5D4;border-radius:12px;background:#090C14;margin:10px 0;">
-    <svg width="52" height="52" viewBox="0 0 100 100" style="flex-shrink:0;">
-      <g class="lg-cw"><polygon points="50,6 90,28 90,72 50,94 10,72 10,28" fill="none" stroke="#00F5D4" stroke-width="5"/>
-      <ellipse cx="50" cy="50" rx="42" ry="15" fill="none" stroke="#E2E8F0" stroke-width="3"/></g>
-      <g class="lg-ccw"><ellipse cx="50" cy="50" rx="15" ry="42" fill="none" stroke="#FF2A6D" stroke-width="4.5"/>
-      <path d="M24 34 L38 72 L50 48 L62 72 L76 34" fill="none" stroke="#F472B6" stroke-width="6" stroke-linecap="round"/></g>
-    </svg><b style="color:#F8FAFC;">{msg}</b></div>"""
+    <div style="position:relative;width:54px;height:54px;flex-shrink:0;">
+      <div class="spin-cw"><svg width="54" height="54" viewBox="0 0 100 100"><polygon points="50,5 91,27 91,73 50,95 9,73 9,27" fill="none" stroke="#00F5D4" stroke-width="5"/><ellipse cx="50" cy="50" rx="42" ry="14" fill="none" stroke="#E2E8F0" stroke-width="3"/></svg></div>
+      <div class="spin-ccw"><svg width="54" height="54" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="14" ry="42" fill="none" stroke="#FF2A6D" stroke-width="4.5"/><path d="M24 34 L38 72 L50 48 L62 72 L76 34" fill="none" stroke="#FF2A6D" stroke-width="6" stroke-linecap="round"/></svg></div>
+    </div><b style="color:#F8FAFC;">{msg}</b></div>"""
 
 def render_yinyang_loader(msg: str = "Devil's Advocate is cross-examining every clause..."):
     return f"""<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border:1px solid #FF2A6D;border-radius:12px;background:#090C14;margin:10px 0;">
-    <svg width="52" height="52" viewBox="0 0 100 100" style="flex-shrink:0;">
-      <g class="lg-cw"><circle cx="50" cy="50" r="35" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/>
-      <path d="M50 15 A35 35 0 0 1 50 85 A17.5 17.5 0 0 1 50 50 A17.5 17.5 0 0 0 50 15 Z" fill="#FF2A6D"/>
-      <circle cx="50" cy="32.5" r="5.5" fill="#0B0E17"/><circle cx="50" cy="67.5" r="5.5" fill="#E2E8F0"/></g>
-      <g class="lg-ccw"><circle cx="50" cy="50" r="45" fill="none" stroke="#FF2A6D" stroke-width="3.5" stroke-dasharray="30 16"/>
-      <ellipse cx="50" cy="50" rx="46" ry="16" fill="none" stroke="#00F5D4" stroke-width="2.5"/></g>
-    </svg><b style="color:#F8FAFC;">{msg}</b></div>"""
+    <div style="position:relative;width:54px;height:54px;flex-shrink:0;">
+      <div class="spin-cw"><svg width="54" height="54" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/><path d="M50 16 A34 34 0 0 1 50 84 A17 17 0 0 1 50 50 A17 17 0 0 0 50 16 Z" fill="#FF2A6D"/><circle cx="50" cy="33" r="5" fill="#0B0E17"/><circle cx="50" cy="67" r="5" fill="#E2E8F0"/></svg></div>
+      <div class="spin-ccw"><svg width="54" height="54" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#FF2A6D" stroke-width="3.5" stroke-dasharray="28 16"/><ellipse cx="50" cy="50" rx="46" ry="15" fill="none" stroke="#00F5D4" stroke-width="2.5"/></svg></div>
+    </div><b style="color:#F8FAFC;">{msg}</b></div>"""
 def render_devils_advocate_suite(txt: str, pref_lang: str):
     res = st.session_state.get("da_res")
     if not res: return
@@ -53,6 +48,7 @@ def render_devils_advocate_suite(txt: str, pref_lang: str):
         ld = st.empty(); ld.markdown(render_yinyang_loader("Simulating your personal habits..."), unsafe_allow_html=True)
         st.session_state["pers_plan"] = critic_engine.run_personalized_simulation(txt, f"Late:{late}/yr, Leaves:{leaves}/yr, Exit:{ex}. {note}", pref_lang); ld.empty()
     if st.session_state.get("pers_plan"): st.info(st.session_state["pers_plan"])
+
 def render_risk_analytics():
     da = st.session_state.get("da_res") or {}
     good_cnt = max(1, len(st.session_state.get("good", [])))

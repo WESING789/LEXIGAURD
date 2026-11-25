@@ -60,7 +60,7 @@ with t1:
         st.markdown(f'<div class="hint-box"><b>Active:</b> {"Mask PII ON (IDs Scrubbed)" if pii_on else "Mask PII OFF"} • {"Showing Loopholes & Fixes" if reveal_details else "Summary View"}</div>', unsafe_allow_html=True)
         if run_btn and raw_text.strip():
             loader = st.empty()
-            loader.markdown('<div class="lux-loader"><div class="lux-spin"><svg width="42" height="42" viewBox="0 0 64 64" fill="none"><path d="M18 10H46L34 32L46 54H18L30 32L18 10Z" stroke="#cbd5e1" stroke-width="3" fill="rgba(203,213,225,0.12)"/><path d="M16 32C16 25 26 25 32 32C38 39 48 39 48 32C48 25 38 25 32 32C26 39 16 39 16 32Z" stroke="#2dd4bf" stroke-width="2.5"/></svg></div><div style="color:#5eead4;font-weight:700;margin-top:0.4rem">Please wait — scanning fine print &amp; detecting hidden loopholes...</div></div>', unsafe_allow_html=True)
+            loader.markdown(ui_upgrades.dual_overlap_loader(), unsafe_allow_html=True)
             try:
                 clean, meta = sanitize_and_fingerprint(raw_text, mask_pii=pii_on)
                 out = auditor_app.invoke({"contract_text": clean, "playbook_rules": playbook, "retries": 0, "hallucination_errors": [], "security_metadata": meta})
@@ -93,8 +93,7 @@ with t1:
                 st.download_button("Export Report", rep, "LEXGUARDIAN_Report.md", use_container_width=True)
             q = st.text_input("Ask a quick question about this document:", placeholder="e.g. Can they terminate me without notice? / Is my deposit refundable?")
             if q and st.session_state.last_doc:
-                _m = st.empty(); _m.markdown(ui_upgrades.dual_overlap_loader("Checking document..."), unsafe_allow_html=True)
-                if True: st.success(ask_doc_question(st.session_state.last_doc, q))
+                with st.spinner("Checking document..."): st.success(ask_doc_question(st.session_state.last_doc, q))
 
     st.markdown('---')
     st.markdown('### DEVIL\'S ADVOCATE — RUTHLESS CRITIC')
