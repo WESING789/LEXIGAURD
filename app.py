@@ -97,17 +97,19 @@ with t1:
                 if True: st.success(ask_doc_question(st.session_state.last_doc, q))
 
     st.markdown('---')
-    st.markdown('### DEVIL\'S ADVOCATE')
+    st.markdown('### DEVIL\'S ADVOCATE — RUTHLESS CRITIC')
     u1, u2 = st.columns(2)
-    pdf, paste = u1.file_uploader('Upload PDF/TXT:', type=['pdf','txt']), u2.text_area('Or Paste Text:', height=100)
-    lang = st.selectbox('Extra Language:', ['None','Hinglish','Hindi','Tamil','Marathi','Bengali','Spanish'])
-    txt = (critic_engine.extract_uploaded_text(pdf) if pdf else '') or paste
+    pdf, paste = u1.file_uploader('Upload PDF/TXT (or auto-uses Audit doc):', type=['pdf','txt']), u2.text_area('Or Paste Text:', height=100)
+    lang = st.selectbox('Extra Language Block:', ['None','Hinglish','Hindi','Tamil','Marathi','Bengali','Spanish'])
+    txt = (critic_engine.extract_uploaded_text(pdf) if pdf else '') or paste.strip() or st.session_state.get('last_doc', '') or st.session_state.get('doc_input', '')
+    if st.session_state.get('result') and txt and st.session_state.get('da_src') != txt:
+        ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader('Auto-generating Devil\'s Advocate Report...'), unsafe_allow_html=True)
+        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['da_src'] = txt; ld.empty()
     if st.button("UNLEASH DEVIL'S ADVOCATE") and txt.strip():
         ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader(), unsafe_allow_html=True)
-        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['pers_plan'] = ''; ld.empty()
+        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['da_src'] = txt; st.session_state['pers_plan'] = ''; ld.empty()
     ui_upgrades.render_devils_advocate_suite(txt, lang)
 with t2:
-    if st.session_state.result is not None: st.bar_chart({k: sum(1 for f in st.session_state.result if f.get("risk_level") == k) for k in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]})
-    else: st.info("Run an audit first.")
+    ui_upgrades.render_risk_analytics()
 with t3: st.json(st.session_state.meta or {"status": "Ready", "date": "23/11/2026", "format": "DD/MM/YYYY", "storage": "Zero-Retention Memory"})
 with t4: st.markdown("### LEXGUARDIAN — WE SEE ALL\n- **Architected & Engineered by:** **WESING** | **Date:** 23/11/2026 (DD/MM/YYYY)\n\n#### How Custom Priority Checks Work\n- **Leave Blank:** Scans the entire document broadly for all fair clauses, hidden loopholes, and contradictions.\n- **Type Your Concerns:** Checks your typed priorities FIRST, then flags any other major traps.\n\n#### Button Guide\n- **Load Sample:** Loads a realistic test document.\n- **Clear Workspace:** Clears all text & results.\n- **Strict Audit vs. Work Anyway:** Strict catches every loophole; Work Anyway flags major dealbreakers only.\n- **Mask PII:** Hides Aadhaar/PAN/Email/Phone before scanning.\n- **Show Loopholes & Fixes:** Reveals red trap alerts and safer replacement wording.")
