@@ -38,3 +38,13 @@ def render_devils_advocate_suite(txt: str, pref_lang: str):
         with st.spinner("Calculating your exact personalized risk..."):
             st.session_state["pers_plan"] = critic_engine.run_personalized_simulation(txt, f"Late: {late}/yr, Leaves: {leaves}/yr, Early exit: {ex}. {note}", pref_lang)
     if st.session_state.get("pers_plan"): st.info(st.session_state["pers_plan"])
+
+def render_yinyang_loader(msg: str = "Devil's Advocate is cross-examining every clause..."):
+    return f"""<style>@keyframes yySpin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}</style>
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border:1px solid rgba(0,245,212,0.45);border-radius:12px;background:#090C14;margin:10px 0;box-shadow:0 0 18px rgba(255,42,109,0.2);">
+      <svg width="38" height="38" viewBox="0 0 100 100" style="animation:yySpin 1.1s linear infinite;">
+        <circle cx="50" cy="50" r="46" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/>
+        <path d="M50 4 A46 46 0 0 1 50 96 A23 23 0 0 1 50 50 A23 23 0 0 0 50 4 Z" fill="#FF2A6D"/>
+        <circle cx="50" cy="27" r="7" fill="#0B0E17"/><circle cx="50" cy="73" r="7" fill="#E2E8F0"/>
+      </svg>
+      <span style="color:#F1F5F9;font-weight:700;letter-spacing:0.5px;">{msg}</span></div>"""
