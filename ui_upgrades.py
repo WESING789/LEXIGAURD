@@ -2,29 +2,30 @@ import streamlit as st, critic_engine
 
 def inject_luxury_theme():
     st.markdown("""<style>
-    @keyframes lgSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes lgPulse { 0%, 100% { filter: drop-shadow(0 0 6px #00F5D4); } 50% { filter: drop-shadow(0 0 16px #FF2A6D); } }
-    .lg-spin { transform-origin: 50% 50%; animation: lgSpin 1.2s linear infinite; }
-    .lg-pulse { animation: lgPulse 1.6s ease-in-out infinite; }
+    @keyframes lgSpinCW { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes lgSpinCCW { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+    .lg-cw { position:absolute; inset:0; transform-origin:50% 50%; animation:lgSpinCW 1.4s linear infinite; }
+    .lg-ccw { position:absolute; inset:0; transform-origin:50% 50%; animation:lgSpinCCW 1.1s linear infinite; }
     .stApp { background: radial-gradient(circle at top, #0F121D 0%, #06070A 100%); color: #F1F5F9; }
     .stTabs [aria-selected="true"] { border-bottom: 2px solid #00F5D4 !important; color: #00F5D4 !important; }
     .stButton>button { background: linear-gradient(135deg, #FF2A6D 0%, #9D174D 100%); color: #FFF; border: 1px solid #00F5D4; border-radius: 10px; font-weight: 700; }
     </style>""", unsafe_allow_html=True)
 
+inject_luxury_w_theme = inject_luxury_theme
+
 def squared_infinity_loader(msg: str = "Please wait — scanning fine print & detecting hidden loopholes..."):
     return f"""<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border:1px solid #00F5D4;border-radius:12px;background:#090C14;margin:10px 0;">
-    <svg class="lg-pulse" width="54" height="36" viewBox="0 0 120 70" fill="none" style="flex-shrink:0;">
-      <rect x="6" y="6" width="108" height="58" rx="14" stroke="#E2E8F0" stroke-width="2.5" stroke-dasharray="18 8"/>
-      <path d="M36 22 H48 L72 48 H84 Q96 48 96 35 Q96 22 84 22 H72 L48 48 H36 Q24 48 24 35 Q24 22 36 22 Z" stroke="#00F5D4" stroke-width="4" stroke-linejoin="round"/>
-    </svg><b style="color:#5EEAD4;">{msg}</b></div>"""
+    <div style="position:relative;width:54px;height:54px;flex-shrink:0;">
+      <div class="lg-cw"><svg width="54" height="54" viewBox="0 0 100 100"><rect x="14" y="14" width="72" height="72" rx="18" fill="none" stroke="#00F5D4" stroke-width="4.5"/></svg></div>
+      <div class="lg-ccw"><svg width="54" height="54" viewBox="0 0 120 70" fill="none"><path d="M36 22 H48 L72 48 H84 Q96 48 96 35 Q96 22 84 22 H72 L48 48 H36 Q24 48 24 35 Q24 22 36 22 Z" stroke="#FF2A6D" stroke-width="5.5" stroke-linejoin="round"/></svg></div>
+    </div><b style="color:#5EEAD4;">{msg}</b></div>"""
 
 def render_yinyang_loader(msg: str = "Devil's Advocate is cross-examining every clause..."):
     return f"""<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border:1px solid #FF2A6D;border-radius:12px;background:#090C14;margin:10px 0;">
-    <svg width="46" height="46" viewBox="0 0 100 100" style="flex-shrink:0;">
-      <g class="lg-spin"><circle cx="50" cy="50" r="42" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/>
-      <path d="M50 8 A42 42 0 0 1 50 92 A21 21 0 0 1 50 50 A21 21 0 0 0 50 8 Z" fill="#FF2A6D"/>
-      <circle cx="50" cy="29" r="6" fill="#0B0E17"/><circle cx="50" cy="71" r="6" fill="#E2E8F0"/></g>
-    </svg><b style="color:#F8FAFC;">{msg}</b></div>"""
+    <div style="position:relative;width:52px;height:52px;flex-shrink:0;">
+      <div class="lg-cw"><svg width="52" height="52" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#0B0E17" stroke="#E2E8F0" stroke-width="4"/><path d="M50 15 A35 35 0 0 1 50 85 A17.5 17.5 0 0 1 50 50 A17.5 17.5 0 0 0 50 15 Z" fill="#FF2A6D"/><circle cx="50" cy="32.5" r="5" fill="#0B0E17"/><circle cx="50" cy="67.5" r="5" fill="#E2E8F0"/></svg></div>
+      <div class="lg-ccw"><svg width="52" height="52" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#00F5D4" stroke-width="3" stroke-dasharray="28 16"/></svg></div>
+    </div><b style="color:#F8FAFC;">{msg}</b></div>"""
 def render_devils_advocate_suite(txt: str, pref_lang: str):
     res = st.session_state.get("da_res")
     if not res: return
