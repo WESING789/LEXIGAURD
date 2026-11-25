@@ -11,7 +11,7 @@ class AuditState(TypedDict):
 def invoke_llm(prompt: str) -> str:
     key = os.getenv("GROQ_API_KEY", "").strip()
     if key:
-        for m in ["llama-3.1-8b-instant", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3-32b"]:
+        for m in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant",  "openai/gpt-oss-20b", "qwen/qwen3-32b"]:
             try: return ChatGroq(model=m, api_key=key, temperature=0, max_tokens=3000).invoke(prompt).content
             except Exception as e:
                 if "model_not_found" in str(e) or "404" in str(e): continue
