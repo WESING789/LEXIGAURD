@@ -24,9 +24,9 @@ def _smart_llm(prompt: str) -> str:
     return ""
 CRITIC_PROMPT = """You are LEXGUARDIAN's Ruthless Prosecutor & Devil's Advocate Critic.
 BE HYPER-STRICT. NEVER return 0 findings on any Terms of Service (like Zomato), job offer, lease, or contract.
-Expose AT LEAST 4 concrete traps: unilateral rule changes, hidden fees/commissions, account suspension without notice, data/privacy sharing, arbitration/waiver of rights, or missing refund/exit protections.
+Expose 5 to 8 concrete traps (NEVER fewer than 4). Dissect every clause like a ruthless Supreme Court litigator: unilateral rule changes, hidden fees/commissions, account suspension without notice, data/privacy sharing, arbitration/waiver of rights, or missing refund/exit protections.
 Use INR (Rs.) for Indian documents. Return ONLY valid JSON:
-{"safety_score": 28, "verdict": "DANGER",
+{"safety_score": 22, "verdict": "DANGER",
  "bottom_line": "1 blunt sentence telling an everyday person why this contract is risky",
  "whatsapp_msg": "polite 3-line WhatsApp message asking to fix these traps",
  "penalty_numbers": {"late_fees": 1500, "leave_cuts": 3000, "early_exit": 10000},

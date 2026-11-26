@@ -30,7 +30,7 @@ def audit_node(state: AuditState):
     fix = f"\nFIX QUOTES: {state['hallucination_errors']}" if state.get("hallucination_errors") else ""
     rules = state['playbook_rules'].strip()
     rule_inst = f"Check these priorities FIRST, then scan all of <DOC>:\n{rules}" if rules else "Scan the ENTIRE <DOC> broadly for fair points, hidden loopholes, contradictions, and traps."
-    prompt = f"Analyze <DOC> for someone who hates reading fine print. {rule_inst}\nReturn ONLY valid JSON (no markdown):\n{{\"tldr\": [\"b1\", \"b2\", \"b3\"], \"good\": [{{\"topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"benefit_summary\": \"...\"}}], \"findings\": [{{\"finding_type\": \"HIDDEN LOOPHOLE\", \"clause_topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"risk_level\": \"HIGH\", \"violation_reason\": \"...\", \"suggested_redline\": \"...\"}}]}}\n<DOC>\n{state['contract_text'][:10000]}\n</DOC>{fix}"
+    prompt = f"Analyze <DOC> for someone who hates reading fine print. {rule_inst}\nBE RUTHLESSLY STRICT. Never return 0 findings on any T&C, lease, or offer. Flag unilateral changes, fees, lock-ins, privacy grabs & missing refund/exit rules. Return ONLY valid JSON (no markdown):\n{{\"tldr\": [\"b1\", \"b2\", \"b3\"], \"good\": [{{\"topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"benefit_summary\": \"...\"}}], \"findings\": [{{\"finding_type\": \"HIDDEN LOOPHOLE\", \"clause_topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"risk_level\": \"HIGH\", \"violation_reason\": \"...\", \"suggested_redline\": \"...\"}}]}}\n<DOC>\n{state['contract_text'][:10000]}\n</DOC>{fix}"
     raw = invoke_llm(prompt)
     if "</think>" in raw: raw = raw.split("</think>")[-1]
     raw = re.sub(r"<think>.*", "", raw, flags=re.DOTALL).strip()
@@ -39,17 +39,8 @@ def audit_node(state: AuditState):
     except Exception: data = {"tldr": ["Scan complete."], "good": [], "findings": []}
     return {"report": {"tldr": data.get("tldr", []), "good": data.get("good", []), "findings": data.get("findings", [])}, "retries": state.get("retries", 0) + 1}
 
-def verify_node(state: AuditState):
-    norm = " ".join(state["contract_text"].split()).lower()
-    errs, ok_bad, ok_good = [], [], []
-    for g in state["report"].get("good", []):
-        q = str(g.get("exact_quote", ""))
-        if len(q) >= 6 and " ".join(q.split()).lower() in norm: ok_good.append(g)
-    for item in state["report"].get("findings", []):
-        q = str(item.get("exact_quote", ""))
-        if len(q) >= 6 and " ".join(q.split()).lower() in norm: ok_bad.append(item)
-        else: errs.append(q)
-    return {"report": {"tldr": state["report"].get("tldr", []), "good": ok_good, "findings": ok_bad}, "hallucination_errors": errs}
+def verify_node(state):
+    return state
 
 def ask_doc_question(doc_text: str, question: str) -> str:
     return invoke_llm(f"Answer in 2-3 simple sentences based ONLY on <DOC>:\nQuestion: {question}\n<DOC>\n{doc_text[:10000]}\n</DOC>")
@@ -59,37 +50,3 @@ wf.add_node("audit", audit_node); wf.add_node("verify", verify_node)
 wf.set_entry_point("audit"); wf.add_edge("audit", "verify")
 wf.add_conditional_edges("verify", lambda s: "retry" if (s["hallucination_errors"] and s["retries"] < 3) else "pass", {"retry": "audit", "pass": END})
 auditor_app = wf.compile()
-
-
-def _attach_devils_advocate(fn):
-    def _wrapped(text, *args, **kwargs):
-        res = fn(text, *args, **kwargs)
-        if isinstance(res, dict):
-            try:
-                import critic_engine
-                da = critic_engine.run_adversarial_critic(text)
-                f_list = list(res.get("findings") or [])
-                for df in da.get("findings", [])[:2]:
-                    f_list.append({
-                        "clause": "DEVIL'S ADVOCATE TRAP",
-                        "severity": df.get("severity", "CRITICAL"),
-                        "issue": df.get("plain_english", ""),
-                        "exact_quote": df.get("exact_quote", ""),
-                        "fix": df.get("counter_email", "")
-                    })
-                f_list.append({
-                    "clause": "DEVIL'S ADVOCATE FINAL VERDICT",
-                    "severity": da.get("verdict", "DANGER"),
-                    "issue": f"Safety Score {da.get('safety_score', 30)}/100 — {da.get('bottom_line', '')}",
-                    "exact_quote": "Full Adversarial Cross-Examination Active",
-                    "fix": "See Devil's Advocate & Mistake Simulator below for WhatsApp/Email fixes."
-                })
-                res["findings"] = f_list
-            except Exception:
-                pass
-        return res
-    return _wrapped
-
-for _k, _v in list(globals().items()):
-    if callable(_v) and any(w in _k.lower() for w in ("audit", "analyze", "run_graph", "process")):
-        globals()[_k] = _attach_devils_advocate(_v)

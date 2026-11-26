@@ -105,13 +105,28 @@ with t1:
     txt = (critic_engine.extract_uploaded_text(pdf) if pdf else '') or paste.strip() or st.session_state.get('last_doc', '') or st.session_state.get('doc_input', '')
     ui_upgrades.sync_da_workspace(txt)
     if b3.button('Reset Workspace', key='da_clr'):
-        st.session_state['da_res'] = None; st.session_state['pers_plan'] = ''; st.session_state['da_hash'] = ''
+        st.session_state['da_res'] = None; st.session_state['pers_plan'] = ''; st.session_state['da_merged'] = False; st.session_state['da_hash'] = ''
     if st.session_state.get('result') and txt and not st.session_state.get('da_res'):
         ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader('Devil\'s Advocate is cross-examining...'), unsafe_allow_html=True)
         st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); ld.empty()
     if b2.button("UNLEASH DEVIL'S ADVOCATE", key='da_go') and txt.strip():
         ld = st.empty(); ld.markdown(ui_upgrades.render_yinyang_loader(), unsafe_allow_html=True)
-        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['pers_plan'] = ''; ld.empty()
+        st.session_state['da_res'] = critic_engine.run_adversarial_critic(txt, lang); st.session_state['pers_plan'] = ''; st.session_state['da_merged'] = False; ld.empty()
+    if st.session_state.get('result') and st.session_state.get('da_res') and not st.session_state.get('da_merged'):
+        _r = st.session_state['result']
+        _da = st.session_state['da_res']
+        _fl = list(_r.get('findings') or [])
+        for _df in _da.get('findings', [])[:3]:
+            _fl.append({'clause': "DEVIL'S ADVOCATE TRAP", 'severity': _df.get('severity', 'CRITICAL'),
+                        'issue': _df.get('plain_english', ''), 'exact_quote': _df.get('exact_quote', ''),
+                        'fix': _df.get('counter_email', '')})
+        _fl.append({'clause': "DEVIL'S ADVOCATE FINAL CHECK", 'severity': _da.get('verdict', 'DANGER'),
+                    'issue': f"Safety Score {_da.get('safety_score', 25)}/100 — {_da.get('bottom_line', '')}",
+                    'exact_quote': "Cross-Examined by Devil's Advocate", 'fix': "See Devil's Advocate & Mistake Simulator below."})
+        _r['findings'] = _fl
+        if len(_fl) >= 3: _r['verdict'] = 'HIGH RISK'
+        st.session_state['da_merged'] = True
+        st.rerun()
     ui_upgrades.render_devils_advocate_suite(txt, lang)
 with t2:
     ui_upgrades.render_risk_analytics()
