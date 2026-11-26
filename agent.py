@@ -11,7 +11,7 @@ class AuditState(TypedDict):
 def invoke_llm(prompt: str) -> str:
     key = os.getenv("GROQ_API_KEY", "").strip()
     if key:
-        for m in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant",  "openai/gpt-oss-20b", "qwen/qwen3-32b"]:
+        for m in ["llama-3.1-8b-instant", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3-32b"]:
             try: return ChatGroq(model=m, api_key=key, temperature=0, max_tokens=3000).invoke(prompt).content
             except Exception as e:
                 if "model_not_found" in str(e) or "404" in str(e): continue
@@ -30,7 +30,7 @@ def audit_node(state: AuditState):
     fix = f"\nFIX QUOTES: {state['hallucination_errors']}" if state.get("hallucination_errors") else ""
     rules = state['playbook_rules'].strip()
     rule_inst = f"Check these priorities FIRST, then scan all of <DOC>:\n{rules}" if rules else "Scan the ENTIRE <DOC> broadly for fair points, hidden loopholes, contradictions, and traps."
-    prompt = f"Analyze <DOC> for someone who hates reading fine print. {rule_inst}\nBE RUTHLESSLY STRICT. Never return 0 findings on any T&C, lease, or offer. Flag unilateral changes, fees, lock-ins, privacy grabs & missing refund/exit rules. Return ONLY valid JSON (no markdown):\n{{\"tldr\": [\"b1\", \"b2\", \"b3\"], \"good\": [{{\"topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"benefit_summary\": \"...\"}}], \"findings\": [{{\"finding_type\": \"HIDDEN LOOPHOLE\", \"clause_topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"risk_level\": \"HIGH\", \"violation_reason\": \"...\", \"suggested_redline\": \"...\"}}]}}\n<DOC>\n{state['contract_text'][:10000]}\n</DOC>{fix}"
+    prompt = f"Analyze <DOC> for someone who hates reading fine print. {rule_inst}\nReturn ONLY valid JSON (no markdown):\n{{\"tldr\": [\"b1\", \"b2\", \"b3\"], \"good\": [{{\"topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"benefit_summary\": \"...\"}}], \"findings\": [{{\"finding_type\": \"HIDDEN LOOPHOLE\", \"clause_topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"risk_level\": \"HIGH\", \"violation_reason\": \"...\", \"suggested_redline\": \"...\"}}]}}\n<DOC>\n{state['contract_text'][:10000]}\n</DOC>{fix}"
     raw = invoke_llm(prompt)
     if "</think>" in raw: raw = raw.split("</think>")[-1]
     raw = re.sub(r"<think>.*", "", raw, flags=re.DOTALL).strip()
@@ -39,8 +39,17 @@ def audit_node(state: AuditState):
     except Exception: data = {"tldr": ["Scan complete."], "good": [], "findings": []}
     return {"report": {"tldr": data.get("tldr", []), "good": data.get("good", []), "findings": data.get("findings", [])}, "retries": state.get("retries", 0) + 1}
 
-def verify_node(state):
-    return state
+def verify_node(state: AuditState):
+    norm = " ".join(state["contract_text"].split()).lower()
+    errs, ok_bad, ok_good = [], [], []
+    for g in state["report"].get("good", []):
+        q = str(g.get("exact_quote", ""))
+        if len(q) >= 6 and " ".join(q.split()).lower() in norm: ok_good.append(g)
+    for item in state["report"].get("findings", []):
+        q = str(item.get("exact_quote", ""))
+        if len(q) >= 6 and " ".join(q.split()).lower() in norm: ok_bad.append(item)
+        else: errs.append(q)
+    return {"report": {"tldr": state["report"].get("tldr", []), "good": ok_good, "findings": ok_bad}, "hallucination_errors": errs}
 
 def ask_doc_question(doc_text: str, question: str) -> str:
     return invoke_llm(f"Answer in 2-3 simple sentences based ONLY on <DOC>:\nQuestion: {question}\n<DOC>\n{doc_text[:10000]}\n</DOC>")
