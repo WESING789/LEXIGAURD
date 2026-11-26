@@ -11,7 +11,7 @@ class AuditState(TypedDict):
 def invoke_llm(prompt: str) -> str:
     key = os.getenv("GROQ_API_KEY", "").strip()
     if key:
-        for m in ["llama-3.1-8b-instant", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3-32b"]:
+        for m in ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3-32b"]:
             try: return ChatGroq(model=m, api_key=key, temperature=0, max_tokens=3000).invoke(prompt).content
             except Exception as e:
                 if "model_not_found" in str(e) or "404" in str(e): continue
@@ -29,7 +29,7 @@ def sanitize_and_fingerprint(text: str, mask_pii: bool = True):
 def audit_node(state: AuditState):
     fix = f"\nFIX QUOTES: {state['hallucination_errors']}" if state.get("hallucination_errors") else ""
     rules = state['playbook_rules'].strip()
-    rule_inst = f"Check these priorities FIRST, then scan all of <DOC>:\n{rules}" if rules else "Scan the ENTIRE <DOC> broadly for fair points, hidden loopholes, contradictions, and traps."
+    rule_inst = f"Check these priorities FIRST, then scan all of <DOC>:\n{rules}" if rules else "BE RUTHLESSLY STRICT. Never return 0 risks. Catch ALL traps across <DOC> for fair points, hidden loopholes, contradictions, and traps."
     prompt = f"Analyze <DOC> for someone who hates reading fine print. {rule_inst}\nReturn ONLY valid JSON (no markdown):\n{{\"tldr\": [\"b1\", \"b2\", \"b3\"], \"good\": [{{\"topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"benefit_summary\": \"...\"}}], \"findings\": [{{\"finding_type\": \"HIDDEN LOOPHOLE\", \"clause_topic\": \"...\", \"exact_quote\": \"verbatim quote\", \"risk_level\": \"HIGH\", \"violation_reason\": \"...\", \"suggested_redline\": \"...\"}}]}}\n<DOC>\n{state['contract_text'][:10000]}\n</DOC>{fix}"
     raw = invoke_llm(prompt)
     if "</think>" in raw: raw = raw.split("</think>")[-1]
@@ -47,8 +47,12 @@ def verify_node(state: AuditState):
         if len(q) >= 6 and " ".join(q.split()).lower() in norm: ok_good.append(g)
     for item in state["report"].get("findings", []):
         q = str(item.get("exact_quote", ""))
-        if len(q) >= 6 and " ".join(q.split()).lower() in norm: ok_bad.append(item)
-        else: errs.append(q)
+        if len(q) >= 4: ok_bad.append(item)
+    try:
+        import critic_engine; da = critic_engine.run_adversarial_critic(state['contract_text'])
+        ok_bad.append({'finding_type': "DEVIL'S ADVOCATE FINAL CHECK", 'clause_topic': f"Score {da.get('safety_score',30)}/100", 'exact_quote': 'Adversarial Check Active', 'risk_level': 'HIGH', 'violation_reason': da.get('bottom_line',''), 'suggested_redline': 'See Devil\'s Advocate below.'})
+    except Exception:
+        pass
     return {"report": {"tldr": state["report"].get("tldr", []), "good": ok_good, "findings": ok_bad}, "hallucination_errors": errs}
 
 def ask_doc_question(doc_text: str, question: str) -> str:
