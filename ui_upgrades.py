@@ -6,9 +6,8 @@ def inject_luxury_theme():
     @keyframes lgSpinCCW { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
     .lg-cw { position:absolute; inset:0; transform-origin:50% 50%; animation:lgSpinCW 1.4s linear infinite; }
     .lg-ccw { position:absolute; inset:0; transform-origin:50% 50%; animation:lgSpinCCW 1.1s linear infinite; }
-    .stApp { background: radial-gradient(circle at top, #0F121D 0%, #06070A 100%); color: #F1F5F9; }
     .stTabs [aria-selected="true"] { border-bottom: 2px solid #00F5D4 !important; color: #00F5D4 !important; }
-    .stButton>button { background: linear-gradient(135deg, #FF2A6D 0%, #9D174D 100%); color: #FFF; border: 1px solid #00F5D4; border-radius: 10px; font-weight: 700; }
+    .stButton>button { background: linear-gradient(135deg, #FF2A6D 0%, #9D174D 100%) !important; color: #FFF !important; border: 1px solid #00F5D4 !important; border-radius: 10px !important; font-weight: 700 !important; }
     </style>""", unsafe_allow_html=True)
 
 inject_luxury_w_theme = inject_luxury_theme

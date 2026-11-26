@@ -50,9 +50,8 @@ def verify_node(state: AuditState):
         if len(q) >= 4: ok_bad.append(item)
     try:
         import critic_engine; da = critic_engine.run_adversarial_critic(state['contract_text'])
-        ok_bad.append({'finding_type': "DEVIL'S ADVOCATE FINAL CHECK", 'clause_topic': f"Score {da.get('safety_score',30)}/100", 'exact_quote': 'Adversarial Check Active', 'risk_level': 'HIGH', 'violation_reason': da.get('bottom_line',''), 'suggested_redline': 'See Devil\'s Advocate below.'})
-    except Exception:
-        pass
+        ok_bad.append({'finding_type': "DEVIL'S ADVOCATE FINAL CHECK", 'clause_topic': f"Score {da.get('safety_score',30)}/100", 'exact_quote': 'Adversarial Cross-Examination Active', 'risk_level': 'HIGH', 'violation_reason': da.get('bottom_line',''), 'suggested_redline': 'See Devil\'s Advocate section below.'})
+    except Exception: pass
     return {"report": {"tldr": state["report"].get("tldr", []), "good": ok_good, "findings": ok_bad}, "hallucination_errors": errs}
 
 def ask_doc_question(doc_text: str, question: str) -> str:
