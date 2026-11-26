@@ -59,3 +59,37 @@ wf.add_node("audit", audit_node); wf.add_node("verify", verify_node)
 wf.set_entry_point("audit"); wf.add_edge("audit", "verify")
 wf.add_conditional_edges("verify", lambda s: "retry" if (s["hallucination_errors"] and s["retries"] < 3) else "pass", {"retry": "audit", "pass": END})
 auditor_app = wf.compile()
+
+
+def _attach_devils_advocate(fn):
+    def _wrapped(text, *args, **kwargs):
+        res = fn(text, *args, **kwargs)
+        if isinstance(res, dict):
+            try:
+                import critic_engine
+                da = critic_engine.run_adversarial_critic(text)
+                f_list = list(res.get("findings") or [])
+                for df in da.get("findings", [])[:2]:
+                    f_list.append({
+                        "clause": "DEVIL'S ADVOCATE TRAP",
+                        "severity": df.get("severity", "CRITICAL"),
+                        "issue": df.get("plain_english", ""),
+                        "exact_quote": df.get("exact_quote", ""),
+                        "fix": df.get("counter_email", "")
+                    })
+                f_list.append({
+                    "clause": "DEVIL'S ADVOCATE FINAL VERDICT",
+                    "severity": da.get("verdict", "DANGER"),
+                    "issue": f"Safety Score {da.get('safety_score', 30)}/100 — {da.get('bottom_line', '')}",
+                    "exact_quote": "Full Adversarial Cross-Examination Active",
+                    "fix": "See Devil's Advocate & Mistake Simulator below for WhatsApp/Email fixes."
+                })
+                res["findings"] = f_list
+            except Exception:
+                pass
+        return res
+    return _wrapped
+
+for _k, _v in list(globals().items()):
+    if callable(_v) and any(w in _k.lower() for w in ("audit", "analyze", "run_graph", "process")):
+        globals()[_k] = _attach_devils_advocate(_v)
