@@ -8,9 +8,9 @@ def inject_luxury_theme():
     .lg-ccw { position:absolute; inset:0; transform-origin:50% 50%; animation:lgSpinCCW 1.1s linear infinite; }
     .stTabs [aria-selected="true"] { border-bottom: 2px solid #00F5D4 !important; color: #00F5D4 !important; }
     .stButton>button { background: linear-gradient(135deg, #FF2A6D 0%, #9D174D 100%) !important; color: #FFF !important; border: 1px solid #00F5D4 !important; border-radius: 10px !important; font-weight: 700 !important; }
+    .good-card { border-left: 4px solid #00F5D4; padding: 12px; background: rgba(0,245,212,0.08); border-radius: 8px; margin-bottom: 8px; }
+    .bad-card { border-left: 4px solid #FF2A6D; padding: 12px; background: rgba(255,42,109,0.1); border-radius: 8px; margin-bottom: 8px; }
     </style>""", unsafe_allow_html=True)
-
-inject_luxury_w_theme = inject_luxury_theme
 
 def squared_infinity_loader(msg: str = "Please wait — scanning fine print & detecting hidden loopholes..."):
     return f"""<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border:1px solid #00F5D4;border-radius:12px;background:#090C14;margin:10px 0;">
@@ -35,7 +35,7 @@ def sync_da_workspace(txt: str):
 def render_devils_advocate_suite(txt: str, pref_lang: str):
     res = st.session_state.get("da_res")
     if not res: return
-    score, verdict = int(res.get("safety_score", 50)), res.get("verdict", "CAUTION")
+    score, verdict = int(res.get("safety_score", 35)), res.get("verdict", "DANGER")
     col = "#00F5D4" if score >= 75 else ("#F472B6" if score >= 45 else "#FF2A6D")
     st.markdown(f"<div style='border:1px solid #00F5D4;border-radius:12px;padding:14px;background:#090C14;margin:8px 0;'><b>DEVIL'S ADVOCATE REPORT:</b> <b style='color:{col};font-size:1.2rem;'>{score}/100 — {verdict}</b><p style='margin:4px 0 0 0;'>{res.get('bottom_line','')}</p></div>", unsafe_allow_html=True)
     sim = res.get("mistake_simulator", {})
@@ -60,16 +60,16 @@ def render_devils_advocate_suite(txt: str, pref_lang: str):
 def render_risk_analytics():
     da = st.session_state.get("da_res") or {}
     good_cnt = max(1, len(st.session_state.get("good", [])))
-    findings = da.get("findings", [])
+    findings = da.get("findings") or st.session_state.get("result") or []
     if not da and not st.session_state.get("result"):
         st.info("Run an Audit or Devil's Advocate scan in Audit Workspace first to unlock live Risk Analytics.")
         return
     curr = st.selectbox("Display Currency (Regional Default: India INR):", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0, key="ra_curr")
     sym = curr.split()
-    score, verdict = int(da.get("safety_score", 60)), da.get("verdict", "CAUTION")
-    crit = sum(1 for x in findings if x.get("severity") == "CRITICAL")
-    high = sum(1 for x in findings if x.get("severity") == "HIGH")
-    med = sum(1 for x in findings if x.get("severity") not in ("CRITICAL", "HIGH"))
+    score, verdict = int(da.get("safety_score", 35)), da.get("verdict", "DANGER")
+    crit = sum(1 for x in findings if str(x.get("severity", x.get("risk_level", ""))).upper() == "CRITICAL")
+    high = sum(1 for x in findings if str(x.get("severity", x.get("risk_level", ""))).upper() == "HIGH")
+    med = max(0, len(findings) - crit - high)
     m1, m2, m3 = st.columns(3)
     m1.metric("Contract Safety Score", f"{score} / 100", verdict)
     m2.metric("Hidden Traps Detected", f"{len(findings)} Traps", f"{crit} Critical")
@@ -90,13 +90,13 @@ def render_risk_analytics():
         st.markdown(f"""<div style="border:1px solid rgba(0,245,212,0.45);border-radius:14px;padding:18px;background:#090C14;height:210px;">
         <b style="color:#E2E8F0;">Trap Severity Breakdown</b>
         <p style="color:#FF2A6D;margin:12px 0 4px 0;font-weight:700;">Critical Traps: {crit}</p>
-        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, crit*33)}%;background:#FF2A6D;height:10px;border-radius:6px;"></div></div>
+        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, crit*25)}%;background:#FF2A6D;height:10px;border-radius:6px;"></div></div>
         <p style="color:#F472B6;margin:10px 0 4px 0;font-weight:700;">High Risk Traps: {high}</p>
-        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, high*33)}%;background:#F472B6;height:10px;border-radius:6px;"></div></div>
+        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, high*25)}%;background:#F472B6;height:10px;border-radius:6px;"></div></div>
         <p style="color:#00F5D4;margin:10px 0 4px 0;font-weight:700;">Medium / Minor: {med}</p>
-        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, med*33)}%;background:#00F5D4;height:10px;border-radius:6px;"></div></div>
+        <div style="background:#1E293B;border-radius:6px;height:10px;"><div style="width:{min(100, med*25)}%;background:#00F5D4;height:10px;border-radius:6px;"></div></div>
         </div>""", unsafe_allow_html=True)
-    pens = da.get("penalty_numbers", {"late_fees": 0, "leave_cuts": 0, "early_exit": 0})
+    pens = da.get("penalty_numbers", {"late_fees": 1500, "leave_cuts": 3000, "early_exit": 10000})
     lf, lc, ee = int(pens.get("late_fees", 0)), int(pens.get("leave_cuts", 0)), int(pens.get("early_exit", 0))
     st.markdown(f"""<div style="border:1px solid #00F5D4;border-radius:14px;padding:18px;background:#090C14;margin-top:12px;">
     <b style="color:#00F5D4;">ESTIMATED FINANCIAL PENALTY EXPOSURE ({curr})</b>

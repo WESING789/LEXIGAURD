@@ -1,40 +1,6 @@
-import os, re, json, hashlib
+import re, json, hashlib
 from datetime import datetime, timezone
-from typing import TypedDict, List, Dict, Any
-import streamlit as st
-from langchain_groq import ChatGroq
-from langgraph.graph import StateGraph, END
-
-class AuditState(TypedDict):
-    contract_text: str
-    playbook_rules: str
-    report: Dict[str, Any]
-    retries: int
-    hallucination_errors: List[str]
-    security_metadata: Dict[str, Any]
-
-def _groq_key() -> str:
-    try:
-        if "GROQ_API_KEY" in st.secrets:
-            return str(st.secrets["GROQ_API_KEY"]).strip()
-    except Exception:
-        pass
-    return os.getenv("GROQ_API_KEY", "").strip()
-
-def invoke_llm(prompt: str, json_mode: bool = False) -> str:
-    key = _groq_key()
-    if not key:
-        raise RuntimeError("GROQ_API_KEY is missing in Secrets.")
-    kwargs = {"model_kwargs": {"response_format": {"type": "json_object"}}} if json_mode else {}
-    for m in ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]:
-        try:
-            llm = ChatGroq(model=m, api_key=key, temperature=0.0, max_tokens=2200, **kwargs)
-            return llm.invoke(prompt).content
-        except Exception as e:
-            if "429" in str(e) or "404" in str(e) or "not_found" in str(e):
-                continue
-            raise e
-    raise RuntimeError("All Groq models busy — please retry in 5 seconds.")
+import critic_engine
 
 def sanitize_and_fingerprint(text: str, mask_pii: bool = True):
     h = hashlib.sha256(text.encode("utf-8", errors="ignore")).hexdigest()
@@ -47,62 +13,65 @@ def sanitize_and_fingerprint(text: str, mask_pii: bool = True):
         for pat, rep in pats:
             clean, c = re.subn(pat, rep, clean)
             m += c
-    return clean, {"sha256": h, "pii_redacted": m, "date": datetime.now(timezone.utc).strftime("%d/%m/%Y")}
-def audit_node(state: AuditState):
-    rules = state["playbook_rules"].strip()
-    prio = f"Check these user priorities FIRST, then audit ALL of <DOC>:\n{rules}" if rules else "Audit ALL of <DOC> with ruthless legal scrutiny."
+    return clean, {"sha256": h, "pii_redacted": m, "date": datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")}
+
+def run_full_audit(text: str, playbook_rules: str = "") -> dict:
+    rules = playbook_rules.strip()
+    prio = f"Check these priorities FIRST:\n{rules}\nThen audit ALL of <DOC>." if rules else "Audit ALL of <DOC> with ruthless legal scrutiny."
     prompt = f"""You are LEXGUARDIAN, a ruthless consumer-protection contract auditor.
 BE HYPER-STRICT. NEVER return 0 findings on any Terms of Service (like Zomato), job offer, rental agreement, or contract.
-Find AT LEAST 3 to 6 concrete loopholes, unilateral rights, hidden fees, lock-ins, privacy grabs, or missing refund/exit protections.
+Find AT LEAST 3 to 5 concrete loopholes, unilateral rights, hidden fees, lock-ins, privacy grabs, or missing refund/exit protections.
 {prio}
-Return ONLY valid JSON with exact keys:
+Return ONLY valid JSON:
 {{"tldr": ["bullet 1", "bullet 2", "bullet 3"],
-  "good": [{{"topic": "Fair Clause", "exact_quote": "short verbatim quote", "benefit_summary": "why this protects the user"}}],
-  "findings": [{{"finding_type": "HIDDEN LOOPHOLE", "clause_topic": "Topic Name", "exact_quote": "short verbatim quote from <DOC>", "risk_level": "CRITICAL", "violation_reason": "plain-English trap explanation", "suggested_redline": "exact safer replacement clause"}}]}}
+  "good": [{{"topic": "Fair Clause", "exact_quote": "short quote from text", "benefit_summary": "why this protects the user"}}],
+  "findings": [{{"finding_type": "HIDDEN LOOPHOLE", "clause_topic": "Clause Name", "exact_quote": "short quote from text",
+    "risk_level": "CRITICAL", "violation_reason": "plain-English trap explanation", "suggested_redline": "safer replacement clause"}}]}}
 <DOC>
-{state['contract_text'][:11000]}
+{text[:10000]}
 </DOC>"""
-    raw = invoke_llm(prompt, json_mode=True)
-    raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.S).strip()
-    data = json.loads(raw, strict=False)
+    raw = re.sub(r"<think>.*?</think>", "", critic_engine.call_groq(prompt), flags=re.S)
+    raw = re.sub(r"```json|```", "", raw).strip()
+    m = re.search(r"\{.*\}", raw, flags=re.S)
+    data = {}
+    if m:
+        try:
+            data = json.loads(m.group(0), strict=False)
+        except Exception:
+            data = {}
+    tldr = data.get("tldr") or ["Strict clause-by-clause audit completed.", "Review all highlighted financial & exit traps before signing."]
+    good = data.get("good") or []
     findings = list(data.get("findings") or [])
-    try:
-        import critic_engine
-        da = critic_engine.run_adversarial_critic(state["contract_text"])
-        if len(findings) < 2:
-            for df in da.get("findings", [])[:3]:
-                findings.append({
-                    "finding_type": "DEVIL'S ADVOCATE TRAP",
-                    "clause_topic": df.get("severity", "CRITICAL"),
-                    "exact_quote": df.get("exact_quote", "Asymmetric Terms"),
-                    "risk_level": "HIGH",
-                    "violation_reason": df.get("plain_english", ""),
-                    "suggested_redline": df.get("counter_email", "Request mutual notice and fair exit terms.")
-                })
-        findings.append({
-            "finding_type": "DEVIL'S ADVOCATE FINAL CHECK",
-            "clause_topic": f"Safety Score: {da.get('safety_score', 30)}/100 ({da.get('verdict', 'DANGER')})",
-            "exact_quote": "Adversarial Cross-Examination Complete",
-            "risk_level": "HIGH",
-            "violation_reason": da.get("bottom_line", "One-sided terms and missing protections detected."),
-            "suggested_redline": "See full Devil's Advocate & Mistake Simulator breakdown below."
-        })
-    except Exception:
-        pass
-    return {"report": {"tldr": data.get("tldr", ["Audit complete."]), "good": data.get("good", []), "findings": findings}, "retries": state.get("retries", 0) + 1}
-
-def verify_node(state: AuditState):
-    good = [g for g in state["report"].get("good", []) if len(str(g.get("exact_quote", ""))) >= 3]
-    bad = [x for x in state["report"].get("findings", []) if len(str(x.get("exact_quote", ""))) >= 3]
-    return {"report": {"tldr": state["report"].get("tldr", []), "good": good, "findings": bad}, "hallucination_errors": []}
+    for f in findings:
+        f["risk_level"] = str(f.get("risk_level", "HIGH")).upper()
+        if f["risk_level"] not in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+            f["risk_level"] = "HIGH"
+    return {"tldr": tldr, "good": good, "findings": findings}
+def run_audit_with_critic(text: str, playbook_rules: str = "", pref_lang: str = "None"):
+    rep = run_full_audit(text, playbook_rules)
+    da = critic_engine.run_adversarial_critic(text, pref_lang)
+    findings = rep["findings"]
+    if len(findings) < 2:
+        for df in da.get("findings", [])[:3]:
+            findings.append({
+                "finding_type": "STRICT TRAP DETECTED",
+                "clause_topic": df.get("severity", "CRITICAL"),
+                "exact_quote": df.get("exact_quote", "Asymmetric Clause"),
+                "risk_level": "HIGH",
+                "violation_reason": df.get("plain_english", ""),
+                "suggested_redline": df.get("counter_email", "Request mutual notice and fair exit terms.")
+            })
+    findings.append({
+        "finding_type": "DEVIL'S ADVOCATE FINAL CHECK",
+        "clause_topic": f"Safety Score: {da.get('safety_score', 30)}/100 ({da.get('verdict', 'DANGER')})",
+        "exact_quote": "Adversarial Cross-Examination Complete",
+        "risk_level": "HIGH",
+        "violation_reason": da.get("bottom_line", "One-sided terms and missing protections detected."),
+        "suggested_redline": "Review the full Devil's Advocate & Mistake Simulator breakdown below."
+    })
+    rep["findings"] = findings
+    return rep, da
 
 def ask_doc_question(doc_text: str, question: str) -> str:
-    return invoke_llm(f"Answer in 2-3 simple sentences based ONLY on <DOC>:\nQuestion: {question}\n<DOC>\n{doc_text[:10000]}\n</DOC>")
-
-wf = StateGraph(AuditState)
-wf.add_node("audit", audit_node)
-wf.add_node("verify", verify_node)
-wf.set_entry_point("audit")
-wf.add_edge("audit", "verify")
-wf.add_edge("verify", END)
-auditor_app = wf.compile()
+    ans = critic_engine.call_groq(f"Answer in 2-3 simple sentences based ONLY on <DOC>:\nQuestion: {question}\n<DOC>\n{doc_text[:10000]}\n</DOC>")
+    return re.sub(r"<think>.*?</think>", "", ans, flags=re.S).strip() or "Please review the highlighted clauses above."
